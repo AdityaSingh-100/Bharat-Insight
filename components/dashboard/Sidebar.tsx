@@ -14,11 +14,11 @@ import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Overview",   id: "overview" },
-  { icon: Database,        label: "Data Grid",  id: "grid"     },
-  { icon: BarChart3,       label: "Analytics",  id: "charts"   },
-  { icon: Settings,        label: "Settings",   id: "settings" },
-  { icon: HelpCircle,      label: "Help",       id: "help"     },
+  { icon: LayoutDashboard, label: "Overview", id: "overview" },
+  { icon: Database, label: "Data Grid", id: "grid" },
+  { icon: BarChart3, label: "Analytics", id: "charts" },
+  { icon: Settings, label: "Settings", id: "settings" },
+  { icon: HelpCircle, label: "Help", id: "help" },
 ];
 
 function useActiveSection(ids: string[]) {
@@ -31,7 +31,9 @@ function useActiveSection(ids: string[]) {
       const el = document.getElementById(id);
       if (!el) return;
       const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActive(id); },
+        ([entry]) => {
+          if (entry.isIntersecting) setActive(id);
+        },
         { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
       );
       obs.observe(el);
@@ -51,7 +53,9 @@ export function Sidebar() {
   const activeSection = useActiveSection(sectionIds);
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -66,13 +70,20 @@ export function Sidebar() {
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0"
-            style={{ background: "hsl(var(--org-primary) / 0.2)", border: "1px solid hsl(var(--org-primary) / 0.3)" }}
+            style={{
+              background: "hsl(var(--org-primary) / 0.2)",
+              border: "1px solid hsl(var(--org-primary) / 0.3)",
+            }}
           >
             {orgConfig.icon}
           </div>
           <div className="hidden lg:block overflow-hidden">
-            <div className="text-white font-semibold text-sm leading-none">Bharat-Insight</div>
-            <div className="text-white/40 text-xs mt-0.5 truncate">{orgConfig.shortName}</div>
+            <div className="text-white font-semibold text-sm leading-none">
+              Bharat-Insight
+            </div>
+            <div className="text-white/40 text-xs mt-0.5 truncate">
+              {orgConfig.shortName}
+            </div>
           </div>
         </div>
       </div>
@@ -95,7 +106,12 @@ export function Sidebar() {
             >
               <Icon
                 size={18}
-                className={cn("shrink-0 transition-colors", active ? "text-[hsl(var(--org-primary))]" : "group-hover:text-white/80")}
+                className={cn(
+                  "shrink-0 transition-colors",
+                  active
+                    ? "text-[hsl(var(--org-primary))]"
+                    : "group-hover:text-white/80",
+                )}
               />
               <span className="hidden lg:block">{item.label}</span>
             </button>

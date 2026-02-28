@@ -77,11 +77,17 @@ Be concise, analytical, and data-driven. Format with clear sections using **bold
 }
 
 // Models to try in order — falls back if quota exceeded
-const MODELS_FALLBACK = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro"];
+const MODELS_FALLBACK = [
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+];
 
 function parseRetryDelay(err: unknown): number {
   const msg = err instanceof Error ? err.message : String(err);
-  const match = msg.match(/retry(?:Delay)?['":\s]+(\d+)s/i) ?? msg.match(/Please retry in ([\d.]+)s/i);
+  const match =
+    msg.match(/retry(?:Delay)?['":\s]+(\d+)s/i) ??
+    msg.match(/Please retry in ([\d.]+)s/i);
   return match ? Math.ceil(parseFloat(match[1])) * 1000 : 0;
 }
 
@@ -120,7 +126,10 @@ export async function* streamGeminiInsight(
         // Try waiting the suggested delay before next model
         const delay = parseRetryDelay(err);
         if (delay > 0 && delay < 30_000) {
-          yield { type: "thinking", content: `Rate limited on ${modelName}, retrying in ${Math.ceil(delay / 1000)}s...` };
+          yield {
+            type: "thinking",
+            content: `Rate limited on ${modelName}, retrying in ${Math.ceil(delay / 1000)}s...`,
+          };
           await new Promise((r) => setTimeout(r, delay));
         }
         lastErr = err;
