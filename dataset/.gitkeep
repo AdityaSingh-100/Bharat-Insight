@@ -1,0 +1,13 @@
+# Drop any CSV file here.
+# Bharat-Insight will auto-detect, parse, and build the table schema dynamically.
+#
+# Requirements:
+#   - File must end in .csv
+#   - First row must be headers
+#   - Any number of rows (100K+ supported via virtualization)
+#
+# Examples:
+#   telecom.csv       — TRAI subscriber data
+#   digital_india.csv — MeitY scheme data
+#   agriculture.csv   — Ministry of Agriculture data
+#   any_data.csv      — Platform is fully data-agnostic

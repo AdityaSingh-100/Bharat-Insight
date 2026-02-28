@@ -1,0 +1,21 @@
+id,state,district,year,quarter,scheme,category,beneficiaries,budget_allocated,budget_utilized,completion_percentage,digital_literacy_score,internet_penetration,common_service_centres,status
+DIG-000001,Andhra Pradesh,Guntur,2024,Q1,BharatNet,Infrastructure,125000,15000000,12500000,83.3,72.5,68.4,245,Active
+DIG-000002,Maharashtra,Pune,2024,Q1,PM-WANI,Rural Connectivity,89000,8500000,7200000,84.7,78.2,74.1,189,Active
+DIG-000003,Karnataka,Mysuru,2024,Q1,PMGDISHA,Capacity Building,234000,18000000,15600000,86.7,68.9,62.3,312,Completed
+DIG-000004,Tamil Nadu,Coimbatore,2024,Q2,DigiLocker,Service Delivery,456000,12000000,10800000,90.0,81.4,76.8,278,Active
+DIG-000005,Delhi,Central,2024,Q2,UMANG,Urban Digital,178000,9500000,9025000,95.0,88.7,91.2,145,Active
+DIG-000006,Gujarat,Ahmedabad,2024,Q2,CSC Network,Infrastructure,312000,22000000,18500000,84.1,74.3,69.7,421,Active
+DIG-000007,Rajasthan,Jaipur,2024,Q3,BharatNet,Rural Connectivity,267000,25000000,19750000,79.0,61.2,55.8,389,Under Review
+DIG-000008,Uttar Pradesh,Lucknow,2024,Q3,PMGDISHA,Capacity Building,589000,35000000,27300000,78.0,55.8,48.9,654,Active
+DIG-000009,West Bengal,Kolkata,2023,Q4,PM-WANI,Infrastructure,198000,14500000,11600000,80.0,69.3,63.7,287,Active
+DIG-000010,Kerala,Thiruvananthapuram,2023,Q4,DigiLocker,Service Delivery,134000,7800000,7488000,96.0,89.4,87.6,198,Completed
+DIG-000011,Punjab,Chandigarh,2023,Q3,CSC Network,Rural Connectivity,98000,11000000,8580000,78.0,75.1,71.4,167,Active
+DIG-000012,Haryana,Gurugram,2023,Q3,UMANG,Urban Digital,145000,9200000,8556000,93.0,82.7,79.3,198,Active
+DIG-000013,Madhya Pradesh,Bhopal,2023,Q2,BharatNet,Infrastructure,423000,31000000,21700000,70.0,52.4,45.6,567,Pending
+DIG-000014,Bihar,Patna,2023,Q2,PMGDISHA,Capacity Building,678000,42000000,29400000,70.0,44.8,38.2,745,Active
+DIG-000015,Odisha,Bhubaneswar,2023,Q1,PM-WANI,Rural Connectivity,234000,19000000,15770000,83.0,59.7,54.1,356,Active
+DIG-000016,Assam,Guwahati,2022,Q4,BharatNet,Infrastructure,187000,23000000,16100000,70.0,51.3,44.7,289,Active
+DIG-000017,Chhattisgarh,Raipur,2022,Q4,PMGDISHA,Capacity Building,298000,21000000,14700000,70.0,48.6,41.2,412,Active
+DIG-000018,Jharkhand,Ranchi,2022,Q3,CSC Network,Infrastructure,156000,18000000,10800000,60.0,42.1,35.8,234,Pending
+DIG-000019,Himachal Pradesh,Shimla,2022,Q3,DigiLocker,Service Delivery,67000,5500000,4675000,85.0,77.8,73.2,112,Active
+DIG-000020,Uttarakhand,Dehradun,2022,Q2,PM-WANI,Rural Connectivity,89000,8900000,7210000,81.0,69.4,64.8,143,Active
