@@ -156,12 +156,14 @@ export function AIPanel({
         }
         return next;
       });
-    } catch {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[AIPanel Gemini error]", err);
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
-          content: "An error occurred. Please check your Gemini API key.",
+          content: `❌ ${msg}`,
         },
       ]);
     } finally {

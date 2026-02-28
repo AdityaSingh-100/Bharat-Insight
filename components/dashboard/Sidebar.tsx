@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import {
   LayoutDashboard,
@@ -9,30 +8,57 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  LogOut,
   Activity,
 } from "lucide-react";
 import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-  { icon: Database, label: "Data Grid", href: "/dashboard#grid" },
-  { icon: BarChart3, label: "Analytics", href: "/dashboard#charts" },
-  { icon: Settings, label: "Settings", href: "/dashboard#settings" },
-  { icon: HelpCircle, label: "Help", href: "/dashboard#help" },
+  { icon: LayoutDashboard, label: "Overview",   id: "overview" },
+  { icon: Database,        label: "Data Grid",  id: "grid"     },
+  { icon: BarChart3,       label: "Analytics",  id: "charts"   },
+  { icon: Settings,        label: "Settings",   id: "settings" },
+  { icon: HelpCircle,      label: "Help",       id: "help"     },
 ];
+
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0]);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActive(id); },
+        { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [ids]);
+
+  return active;
+}
 
 export function Sidebar() {
   const { currentOrg } = useOrgStore();
-  const pathname = usePathname();
-  const orgConfig = ORG_CONFIGS[currentOrg];
+  const orgConfig = ORG_CONFIGS[currentOrg] ?? ORG_CONFIGS["health"];
+  const sectionIds = NAV_ITEMS.map((n) => n.id);
+  const activeSection = useActiveSection(sectionIds);
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <motion.aside
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.35 }}
       className="fixed left-0 top-0 h-full w-16 lg:w-60 z-20 flex flex-col border-r border-white/5 bg-black/40 backdrop-blur-xl transition-theme"
     >
       {/* Logo */}
@@ -40,7 +66,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center text-lg shrink-0"
-            style={{ background: `hsl(var(--org-primary) / 0.2)`, border: `1px solid hsl(var(--org-primary) / 0.3)` }}
+            style={{ background: "hsl(var(--org-primary) / 0.2)", border: "1px solid hsl(var(--org-primary) / 0.3)" }}
           >
             {orgConfig.icon}
           </div>
@@ -54,33 +80,30 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 py-4 px-2 space-y-1">
         {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href.split("#")[0]));
+          const active = activeSection === item.id;
           const Icon = item.icon;
           return (
-            <Link
-              key={item.href}
-              href={item.href}
+            <button
+              key={item.id}
+              onClick={() => scrollTo(item.id)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group",
                 active
                   ? "bg-[hsl(var(--org-primary)/0.15)] text-white border border-[hsl(var(--org-primary)/0.2)]"
-                  : "text-white/50 hover:text-white hover:bg-white/5"
+                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent",
               )}
             >
               <Icon
                 size={18}
-                className={cn(
-                  "shrink-0 transition-colors",
-                  active ? "text-[hsl(var(--org-primary))]" : "group-hover:text-white/80"
-                )}
+                className={cn("shrink-0 transition-colors", active ? "text-[hsl(var(--org-primary))]" : "group-hover:text-white/80")}
               />
               <span className="hidden lg:block">{item.label}</span>
-            </Link>
+            </button>
           );
         })}
       </nav>
 
-      {/* Status indicator */}
+      {/* Status */}
       <div className="p-4 border-t border-white/5">
         <div className="hidden lg:flex items-center gap-2 text-xs text-white/30">
           <Activity size={12} className="text-emerald-400" />

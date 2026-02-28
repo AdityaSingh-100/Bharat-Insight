@@ -76,6 +76,15 @@ Respond with:
 Be concise, analytical, and data-driven. Format with clear sections using **bold** headers.`;
 }
 
+// Models to try in order — falls back if quota exceeded
+const MODELS_FALLBACK = ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro"];
+
+function parseRetryDelay(err: unknown): number {
+  const msg = err instanceof Error ? err.message : String(err);
+  const match = msg.match(/retry(?:Delay)?['":\s]+(\d+)s/i) ?? msg.match(/Please retry in ([\d.]+)s/i);
+  return match ? Math.ceil(parseFloat(match[1])) * 1000 : 0;
+}
+
 // Real Gemini streaming via official SDK
 export async function* streamGeminiInsight(
   opts: GeminiStreamOptions,
@@ -87,17 +96,43 @@ export async function* streamGeminiInsight(
   };
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-  const result = await model.generateContentStream({
-    contents: [{ role: "user", parts: [{ text: buildPrompt(opts) }] }],
-    generationConfig: { temperature: 0.65, maxOutputTokens: 1024 },
-  });
+  let lastErr: unknown;
+  for (const modelName of MODELS_FALLBACK) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContentStream({
+        contents: [{ role: "user", parts: [{ text: buildPrompt(opts) }] }],
+        generationConfig: { temperature: 0.65, maxOutputTokens: 1024 },
+      });
 
-  for await (const chunk of result.stream) {
-    const text = chunk.text();
-    if (text) yield { type: "text", content: text };
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) yield { type: "text", content: text };
+      }
+      return; // success — stop trying fallbacks
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const is429 = msg.includes("429") || msg.toLowerCase().includes("quota");
+      console.error(`[Gemini ${modelName}]`, msg);
+
+      if (is429) {
+        // Try waiting the suggested delay before next model
+        const delay = parseRetryDelay(err);
+        if (delay > 0 && delay < 30_000) {
+          yield { type: "thinking", content: `Rate limited on ${modelName}, retrying in ${Math.ceil(delay / 1000)}s...` };
+          await new Promise((r) => setTimeout(r, delay));
+        }
+        lastErr = err;
+        continue; // try next model
+      }
+      throw new Error(`Gemini request failed: ${msg}`);
+    }
   }
+
+  // All models exhausted
+  const msg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+  throw new Error(`All Gemini models quota exceeded. ${msg}`);
 }
 
 // Legacy fetch-based streaming (fallback)
@@ -106,7 +141,7 @@ async function* _streamGeminiInsightFetch(
   apiKey: string,
 ): AsyncGenerator<{ type: "thinking" | "text"; content: string }> {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:streamGenerateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
