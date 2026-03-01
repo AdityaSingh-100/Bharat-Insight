@@ -1,239 +1,203 @@
-# Bharat-Insight v2 — AI-Driven Data Platform
+# Bharat-Insight
 
-> **Fully data-agnostic** multi-tenant analytics platform. Drop any CSV into `/dataset` and the platform auto-detects schema, builds table columns, infers types, and feeds Gemini AI with real statistics.
+**AI-Driven Data Intelligence Platform for Government Analytics**
 
----
-
-## 🆕 v2 Changes
-
-| Feature | v1 | v2 |
-|---------|----|----|
-| Tailwind | v3 (JS config) | **v4 (CSS-first `@theme`)** |
-| Data source | Hardcoded telecom schema | **Any CSV from `/dataset`** |
-| Table columns | Manual `ColumnDef` per field | **Auto-generated from CSV headers** |
-| Type inference | None | **number, year, percentage, currency, string, boolean** |
-| Filters | Fixed state/year/category | **Dynamic — any low-cardinality column** |
-| Charts | Hardcoded telecom metrics | **Auto-built from numeric columns** |
-| AI context | Hardcoded field names | **Dynamic stats from actual CSV data** |
-| CSV parsing | None | **PapaParse — handles 100K+ rows** |
+A fully data-agnostic, multi-tenant analytics platform built with Next.js 16, Tailwind CSS v4, and Google Gemini AI. Drop any CSV into `/dataset` and the platform auto-detects schema, builds interactive tables, generates charts, and provides AI-powered insights — all in real time.
 
 ---
 
-## ⚡ Quick Start
+## Features
+
+- **Data-Agnostic Engine** — drop any CSV, get auto-detected schema, types, filters, and charts
+- **100K+ Row Virtualization** — TanStack Virtual renders only visible rows (~40 DOM nodes max)
+- **Gemini AI Insights** — streaming AI analysis with dynamic prompts built from real data statistics
+- **Multi-Tenant Theming** — instant CSS variable swap between organizations (zero JS re-render)
+- **RBAC** — role-based access control via Supabase `profiles` table (admin/viewer)
+- **Dual Auth** — Google OAuth + email/password with Supabase
+- **Command Palette** — `Ctrl+K` / `⌘K` for quick actions (switch org, dataset, role, filters)
+- **Responsive** — desktop sidebar collapses to icon-strip, mobile gets a slide-out drawer
+- **Dark Mode** — forced dark theme with custom scrollbars and smooth transitions
+
+---
+
+## Tech Stack
+
+| Layer       | Technology                                |
+| ----------- | ----------------------------------------- |
+| Framework   | Next.js 16 (App Router, Turbopack)        |
+| UI          | React 19, Tailwind CSS 4, Motion (Framer) |
+| State       | Zustand 5 (persisted)                     |
+| Data Table  | TanStack Table + Virtual                  |
+| Charts      | Recharts                                  |
+| CSV Parsing | PapaParse                                 |
+| Auth        | Supabase (Google OAuth + Email)           |
+| AI          | Google Gemini (`@google/generative-ai`)   |
+| Icons       | Lucide React                              |
+| Deploy      | Vercel                                    |
+
+---
+
+## Quick Start
 
 ```bash
-git clone https://github.com/you/bharat-insight
+git clone https://github.com/your-username/bharat-insight.git
 cd bharat-insight
 npm install
 
-# Drop your CSV files
-cp your-data.csv dataset/
-
-# Configure API keys (optional — mock mode works without keys)
+# Configure environment
 cp .env.example .env.local
+# Fill in: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_GEMINI_API_KEY
 
 npm run dev
 # → http://localhost:3000
 ```
 
----
 
-## 📂 Using the `/dataset` Folder
-
-This is the only thing you need to interact with:
-
-```
-dataset/
-  telecom.csv          ← included sample
-  digital_india.csv    ← included sample
-  your-custom-data.csv ← just paste it here!
-```
-
-**Rules:**
-- Files must end in `.csv`
-- First row = column headers
-- Any number of rows (100K+ virtualized smoothly)
-- Any columns — schema is 100% auto-detected
-
-**The system will automatically:**
-1. Read the CSV server-side via `/api/dataset`
-2. Parse with PapaParse (handles quotes, escapes, encoding)
-3. Infer column types per column
-4. Generate TanStack Table column definitions
-5. Build filter dropdowns for categorical columns
-6. Compute summary statistics for AI context
-7. Feed everything into Gemini AI
-
----
-
-## 🧠 CSV Schema Inference
-
-The `lib/csv-engine.ts` engine runs on every loaded file:
-
-```
-Header + sample values
-       │
-       ▼
-inferColumnType(header, values[])
-       │
-       ├── isYear()        → 1900–2100 integer range
-       ├── isPercentage()  → header keywords: "rate", "share", "%", "ratio"
-       ├── isCurrency()    → header keywords: "revenue", "budget", "arpu", etc.
-       ├── allNumeric?     → number
-       ├── booleanSet?     → boolean
-       └── default         → string
-```
-
-**Low-cardinality strings** (`uniqueCount ≤ 80`) automatically become filter dropdowns.
-
----
-
-## ⚡ Virtualization Strategy (100K+ rows)
-
-**TanStack Virtual** — only renders rows in the visible viewport:
-
-```
-100,000 rows in memory
-        │
-    Viewport = ~15 visible rows
-        │
-    Overscan = +25 rows buffer
-        │
-    DOM nodes = ~40 max (regardless of row count)
-```
-
-1. `useVirtualizer({ estimateSize: () => 42 })` — fixed row height for predictability  
-2. `paddingTop` / `paddingBottom` div spacers maintain scrollbar proportion  
-3. Filtering runs via `match-sorter` on the in-memory array (no server round-trip)  
-4. Data is generated/parsed once and cached in Zustand store
-
----
-
-## 🏢 Multi-Tenant Architecture
-
-```
-Zustand useOrgStore
-    ├── currentOrg: "communications" | "meity"
-    ├── role: "admin" | "viewer"
-    ├── activeFilters: Record<columnKey, value>  ← dynamic!
-    └── globalSearch: string
-
-CSS Variables (instant theme switch — no JS re-render):
-    .org-meity {
-      --color-org-primary: hsl(160 84% 39%);  ← emerald
-    }
-    (default) {
-      --color-org-primary: hsl(217 91% 60%);  ← blue
-    }
-```
-
-Dataset switching is separate from org switching — each org can load different CSVs via the file picker.
-
----
-
-## 🤖 AI Prompt Design
-
-The prompt is **fully dynamic** — no hardcoded field names:
-
-```
-Dataset: "your-file.csv"
-Columns: 12 · Numeric: subscribers, market_share, arpu · Categorical: state, operator
-
-Current View:
-  Filtered rows: 2,340 (23.4% of total)
-  Active filters: state="Maharashtra", year="2024"
-
-Numeric Statistics (filtered):
-  subscribers: min=1.2M, max=48.9M, mean=12.4M
-  market_share: min=2.1%, max=42.3%, mean=28.7%
-  arpu: min=48.20, max=248.90, mean=172.30
-
-Categorical Breakdown:
-  operator: 6 unique values, top: Jio, Airtel, Vi
-```
-
-This means Gemini always gets **real numbers** from the actual filtered data — not hardcoded estimates.
-
----
-
-## 🎨 Tailwind v4
-
-No `tailwind.config.ts` — everything in CSS:
-
-```css
-/* postcss.config.js → @tailwindcss/postcss */
-
-@import "tailwindcss";
-
-@theme {
-  --color-org-primary: hsl(217 91% 60%);
-  --color-background: hsl(224 71% 4%);
-  /* ... all design tokens */
-}
-
-/* Org theme variant — instant CSS variable swap */
-.org-meity {
-  --color-org-primary: hsl(160 84% 39%);
-}
-```
-
----
-
-## 🚀 Deployment
-
-### Vercel (recommended)
-
-```bash
-# 1. Push to GitHub
-# 2. Import to vercel.com
-# 3. Add env vars:
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-NEXT_PUBLIC_GEMINI_API_KEY=...
-# 4. Deploy
-```
-
-**Important:** The `/dataset` folder is read server-side at runtime. On Vercel, these files are bundled with the deployment. To update datasets without redeploying, connect to an external storage (S3, Supabase Storage) and update `/app/api/dataset/route.ts`.
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 bharat-insight/
-├── dataset/                    ← DROP CSV FILES HERE
+├── app/
+│   ├── globals.css                 # Tailwind v4 @theme, org themes, custom CSS
+│   ├── layout.tsx                  # Root layout (fonts, metadata, providers)
+│   ├── page.tsx                    # Landing page
+│   ├── login/page.tsx              # Auth page (Google + Email)
+│   ├── auth/callback/route.ts      # Server-side OAuth callback
+│   ├── dashboard/
+│   │   ├── page.tsx                # Main dashboard
+│   │   └── settings/page.tsx       # Settings (account, org, role, dataset)
+│   └── api/dataset/route.ts        # CSV file server
+├── components/
+│   ├── landing/                    # Hero, Features (bento), CTA, Navbar
+│   ├── dashboard/                  # Sidebar, Header, DataGrid, Charts, AI, CommandPalette
+│   └── ui/                         # Shared primitives (dialog, tooltip, button)
+├── lib/
+│   ├── csv-engine.tsx              # PapaParse + type inference + schema builder
+│   ├── gemini.ts                   # Dynamic prompt builder + Gemini streaming
+│   ├── supabase.ts                 # Auth helpers + profile fetcher
+│   └── utils.ts                    # cn() utility
+├── store/
+│   ├── useOrgStore.ts              # Org, RBAC, filters, UI state
+│   └── useDatasetStore.ts          # CSV loading, parsing, derived state
+├── dataset/                        # CSV files (drop your data here)
+│   ├── health_data.csv
+│   ├── agriculture_data.csv
 │   ├── telecom.csv
 │   └── digital_india.csv
-├── app/
-│   ├── globals.css             ← Tailwind v4 (@import "tailwindcss", @theme)
-│   ├── layout.tsx
-│   ├── page.tsx                ← Landing page
-│   ├── dashboard/page.tsx      ← Main dashboard (data-agnostic)
-│   └── api/dataset/route.ts   ← CSV file server (reads /dataset)
-├── components/
-│   ├── landing/
-│   │   ├── HeroSection.tsx
-│   │   ├── FeaturesSection.tsx
-│   │   └── CTASection.tsx
-│   └── dashboard/
-│       ├── DataGrid.tsx         ← TanStack Table + Virtual, dynamic columns
-│       ├── DashboardCharts.tsx  ← Auto-built from numeric columns
-│       ├── AIPanel.tsx          ← Gemini streaming, dynamic context
-│       ├── CommandPalette.tsx   ← ⌘K, includes dataset file switching
-│       ├── DashboardHeader.tsx  ← Org switcher + DatasetFilePicker
-│       ├── DatasetFilePicker.tsx ← CSV file selector
-│       └── Sidebar.tsx
-├── lib/
-│   ├── csv-engine.ts            ← PapaParse + type inference + column builder
-│   ├── gemini.ts                ← Dynamic AI prompts
-│   ├── supabase.ts
-│   └── utils.ts
-├── store/
-│   ├── useOrgStore.ts           ← Org, role, dynamic filters
-│   └── useDatasetStore.ts       ← CSV loading, parsed dataset, filter options
-└── postcss.config.js            ← @tailwindcss/postcss (v4)
+└── docs/                           # Documentation
+    ├── SETUP.md                    # Full setup & deployment guide
+    ├── ARCHITECTURE.md             # System architecture & data flows
+    ├── AUTHENTICATION.md           # Auth & RBAC guide
+    └── API_REFERENCE.md            # API routes, stores, CSV engine
 ```
 
 ---
 
-*Built for Regrip India Pvt. Ltd. Frontend Engineering Assignment 2024*
+## How It Works
+
+### CSV → Dashboard Pipeline
+
+```
+Drop CSV into /dataset
+        ↓
+GET /api/dataset?file=name.csv  →  raw text
+        ↓
+PapaParse  →  rows[]
+        ↓
+Type inference (year, %, currency, number, boolean, string)
+        ↓
+Auto-generate: table columns, filter dropdowns, charts, AI context
+        ↓
+Render with TanStack Virtual (100K+ rows, ~40 DOM nodes)
+```
+
+### AI Insights
+
+The Gemini prompt is built dynamically from your actual data:
+
+- Dataset filename & column types
+- Numeric statistics (min/max/mean/sum) for up to 8 columns
+- Categorical breakdowns (top values for up to 5 columns)
+- Currently active filters and search query
+- Filtered row count vs. total
+
+Model fallback: `gemini-2.5-flash-lite` → `gemini-2.5-flash` → `gemini-2.5-pro` (auto-advances on rate limits).
+
+### Multi-Tenant Theming
+
+Switch organizations instantly — pure CSS variable swap:
+
+```css
+/* Default: Health (blue) */
+--color-org-primary: hsl(217 91% 60%);
+
+/* Agriculture (olive green) */
+.org-agriculture {
+  --color-org-primary: hsl(88 60% 42%);
+}
+```
+
+### RBAC
+
+| Role       | Permissions                                                   |
+| ---------- | ------------------------------------------------------------- |
+| **Admin**  | View, edit, delete rows, export CSV, AI insights, toggle role |
+| **Viewer** | View, search, export CSV, AI insights (no edit/delete)        |
+
+Roles are stored in a Supabase `profiles` table. New signups get `viewer` by default. Admins are promoted via the Supabase Dashboard.
+---
+
+## Environment Variables
+
+```dotenv
+# Required
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+
+# Required for AI (optional — falls back to mock)
+NEXT_PUBLIC_GEMINI_API_KEY=AIzaSy...
+
+# Optional — prevents OAuth port mismatch
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+---
+
+## Adding Your Own Data
+
+1. Place any `.csv` file in the `dataset/` folder
+2. First row = column headers, any number of rows
+3. Restart the dev server (or refresh the dashboard)
+4. Select your file from the dataset picker in the sidebar
+
+The engine handles everything else — type inference, filters, charts, and AI context.
+
+---
+
+## Deployment
+
+### Vercel (recommended)
+
+1. Push to GitHub
+2. Import at [vercel.com/new](https://vercel.com/new)
+3. Add environment variables
+4. Deploy
+
+
+
+
+
+## Scripts
+
+```bash
+npm run dev      # Start dev server (Turbopack)
+npm run build    # Production build
+npm start        # Start production server
+npm run lint     # ESLint
+```
+
+---
+
+## License
+
+Private project.

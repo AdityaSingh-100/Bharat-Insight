@@ -335,10 +335,10 @@ export function HeroSection() {
                   className="group-hover:translate-x-1 transition-transform duration-200"
                 />
               </Link>
-              <button className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl border border-white/10 text-white/60 hover:text-white hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300 text-lg">
+              {/* <button className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl border border-white/10 text-white/60 hover:text-white hover:border-white/20 hover:bg-white/[0.04] transition-all duration-300 text-lg">
                 <Play size={16} className="text-blue-400" />
                 Watch Demo
-              </button>
+              </button> */}
             </motion.div>
 
             {/* Stats */}
