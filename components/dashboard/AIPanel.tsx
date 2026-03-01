@@ -197,10 +197,10 @@ export function AIPanel({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30 lg:hidden"
+            className="fixed inset-0 z-30"
             style={{
-              background: "rgba(0,0,0,0.6)",
-              backdropFilter: "blur(4px)",
+              background: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(2px)",
             }}
             onClick={() => setAIPanelOpen(false)}
           />

@@ -47,11 +47,15 @@ export function CommandPalette() {
         e.preventDefault();
         setCommandPalette(true);
       }
+      if (e.altKey && e.code === "KeyA") {
+        e.preventDefault();
+        setAIPanelOpen(true);
+      }
       if (e.key === "Escape") setCommandPalette(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [setCommandPalette]);
+  }, [setCommandPalette, setAIPanelOpen]);
 
   const COMMANDS: Command[] = [
     // Org switcher

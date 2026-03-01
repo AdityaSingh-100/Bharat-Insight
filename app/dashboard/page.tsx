@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
-import Link from "next/link";
 import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 import { useDatasetStore } from "@/store/useDatasetStore";
 import { buildTableColumns, computeDatasetSummary } from "@/lib/csv-engine";
@@ -17,14 +16,6 @@ import {
   Database,
   BarChart3,
   Layers3,
-  Settings,
-  HelpCircle,
-  Shield,
-  Keyboard,
-  Zap,
-  Brain,
-  Filter,
-  ArrowRight,
   Eye,
 } from "lucide-react";
 import type { DatasetSummary } from "@/lib/csv-engine";
@@ -98,7 +89,7 @@ const DynamicStatCards = memo(function DynamicStatCards({
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
       {numericEntries.map(([label, stats]) => {
         const spread =
           stats.mean && stats.max && stats.mean !== 0
@@ -109,7 +100,7 @@ const DynamicStatCards = memo(function DynamicStatCards({
         return (
           <div
             key={label}
-            className="rounded-xl p-5 transition-all duration-300 hover:bg-white/[0.04]"
+            className="rounded-lg p-3.5 transition-all duration-300 hover:bg-white/[0.04]"
             style={{
               background:
                 "linear-gradient(135deg, rgb(255 255 255 / 0.04) 0%, rgb(255 255 255 / 0.015) 100%)",
@@ -119,20 +110,20 @@ const DynamicStatCards = memo(function DynamicStatCards({
           >
             {/* Label */}
             <div
-              className="text-xs font-medium mb-3 uppercase tracking-widest truncate"
+              className="text-[10px] font-medium mb-2 uppercase tracking-widest truncate"
               style={{ color: "var(--color-muted-foreground)" }}
             >
               {label.replace(/_/g, " ")}
             </div>
 
             {/* Main KPI value */}
-            <div className="flex items-end gap-2 mb-2">
-              <div className="text-3xl font-bold text-white leading-none">
+            <div className="flex items-end gap-1.5 mb-1.5">
+              <div className="text-xl font-bold text-white leading-none">
                 {fmt(stats.mean)}
               </div>
               {spread && Number(spread) > 0 && (
                 <span
-                  className="text-xs pb-0.5 font-medium"
+                  className="text-[10px] pb-0.5 font-medium"
                   style={{ color: "var(--color-success)" }}
                 >
                   ▲{spread}%
@@ -142,7 +133,7 @@ const DynamicStatCards = memo(function DynamicStatCards({
 
             {/* Sub-row: min / max / rows */}
             <div
-              className="flex items-center gap-3 text-[11px] mt-2 pt-2"
+              className="flex items-center gap-2 text-[10px] mt-1.5 pt-1.5"
               style={{
                 borderTop: "1px solid var(--color-border)",
                 color: "var(--color-muted-foreground)",
@@ -168,37 +159,31 @@ const DynamicStatCards = memo(function DynamicStatCards({
 // ─── Help items ───────────────────────────────────────────────────────────────
 const HELP_ITEMS = [
   {
-    icon: Keyboard,
     title: "Keyboard Navigation",
     kbd: "↑↓",
-    desc: "Use arrow keys to navigate rows in the data grid. Press Escape to deselect.",
+    desc: "Arrow keys navigate rows. Escape to deselect.",
   },
   {
-    icon: Brain,
     title: "AI Insights",
     kbd: "Alt+A",
-    desc: "Click 'AI Insights' in the header or use the button to ask Gemini questions about your filtered data.",
+    desc: "Ask Gemini questions about your filtered data.",
   },
   {
-    icon: Filter,
     title: "Column Filters",
-    desc: "Use the filter bar above the data grid to filter any column. All columns are searchable.",
+    desc: "Filter bar above the grid — every column is searchable.",
   },
   {
-    icon: Zap,
     title: "Command Palette",
     kbd: "⌘K",
-    desc: "Press Cmd+K (or Ctrl+K) to open the command palette and quickly jump to any action.",
+    desc: "Quickly jump to any action across the dashboard.",
   },
   {
-    icon: Database,
-    title: "Virtualized Grid",
-    desc: "The data grid uses TanStack Virtual — it renders only visible rows, supporting 100k+ rows without lag.",
+    title: "Paginated Grid",
+    desc: "25 / 50 / 100 / 200 rows per page — use the footer to navigate.",
   },
   {
-    icon: Shield,
     title: "Role-Based Access",
-    desc: "Toggle between Admin and Viewer roles in the header. Admins can edit and delete rows; Viewers are read-only.",
+    desc: "Admins can edit and delete rows; Viewers are read-only.",
   },
 ];
 
@@ -329,15 +314,14 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="p-5 space-y-5">
+          <div className="p-5 space-y-5 ">
             {/* Overview section */}
             <div
               id="overview"
               className="flex items-start justify-between flex-wrap gap-3 scroll-mt-16"
             >
               <div>
-                <h1 className="text-xl font-bold text-white flex items-center gap-2.5">
-                  <span className="text-2xl">{orgConfig.icon}</span>
+                <h1 className="text-xl font-bold text-white">
                   {orgConfig.name}
                 </h1>
                 <p
@@ -352,7 +336,7 @@ export default function DashboardPage() {
 
               {/* Dataset metadata badges */}
               {dataset && (
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2  flex-wrap">
                   {[
                     {
                       icon: Database,
@@ -391,6 +375,54 @@ export default function DashboardPage() {
             {dataset && dynamicSummary && (
               <DynamicStatCards summary={dynamicSummary} />
             )}
+
+            {/* ─── Help & Shortcuts ──────────────────────── */}
+            <div
+              id="help"
+              className="rounded-xl scroll-mt-16"
+              style={{
+                background: "rgb(255 255 255 / 0.02)",
+                border: "1px solid rgb(255 255 255 / 0.06)",
+              }}
+            >
+              <div
+                className="px-4 py-2.5 flex items-center gap-2"
+                style={{ borderBottom: "1px solid rgb(255 255 255 / 0.05)" }}
+              >
+                <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+                  Quick Reference
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-white/[0.04]">
+                {HELP_ITEMS.map((item) => (
+                  <div key={item.title} className="px-4 py-3 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-white/75">
+                        {item.title}
+                      </span>
+                      {item.kbd && (
+                        <kbd
+                          className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0"
+                          style={{
+                            background: "rgb(255 255 255 / 0.07)",
+                            color: "var(--color-muted-foreground)",
+                            border: "1px solid rgb(255 255 255 / 0.08)",
+                          }}
+                        >
+                          {item.kbd}
+                        </kbd>
+                      )}
+                    </div>
+                    <p
+                      className="text-[11px] leading-relaxed"
+                      style={{ color: "var(--color-muted-foreground)" }}
+                    >
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Charts (only when numeric columns present) */}
             <div id="charts" className="scroll-mt-16">
@@ -469,102 +501,7 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* ─── Settings shortcut ─────────────────────── */}
-            <div id="settings" className="scroll-mt-16 pt-2">
-              <Link
-                href="/dashboard/settings"
-                className="group flex items-center justify-between px-5 py-4 rounded-xl transition-all"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.01) 100%)",
-                  border: "1px solid rgb(255 255 255 / 0.07)",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "var(--color-org-muted)" }}
-                  >
-                    <Settings
-                      size={16}
-                      style={{ color: "var(--color-org-primary)" }}
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-white">
-                      Settings
-                    </div>
-                    <div
-                      className="text-xs"
-                      style={{ color: "var(--color-muted-foreground)" }}
-                    >
-                      Account · Organisation · Dataset · Security
-                    </div>
-                  </div>
-                </div>
-                <ArrowRight
-                  size={15}
-                  className="text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all"
-                />
-              </Link>
-            </div>
-
-            {/* ─── Help Section ──────────────────────────── */}
-            <div id="help" className="scroll-mt-16 space-y-4 pt-2 pb-10">
-              <div className="flex items-center gap-2 mb-1">
-                <HelpCircle
-                  size={15}
-                  style={{ color: "var(--color-org-primary)" }}
-                />
-                <h2 className="text-sm font-semibold text-white">
-                  Help &amp; Shortcuts
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {HELP_ITEMS.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-xl p-4"
-                    style={{
-                      background: "rgb(255 255 255 / 0.03)",
-                      border: "1px solid var(--color-border)",
-                    }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center"
-                        style={{ background: "var(--color-org-muted)" }}
-                      >
-                        <item.icon
-                          size={13}
-                          style={{ color: "var(--color-org-primary)" }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-white">
-                        {item.title}
-                      </span>
-                      {item.kbd && (
-                        <kbd
-                          className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-mono"
-                          style={{
-                            background: "rgb(255 255 255 / 0.08)",
-                            color: "var(--color-muted-foreground)",
-                          }}
-                        >
-                          {item.kbd}
-                        </kbd>
-                      )}
-                    </div>
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--color-muted-foreground)" }}
-                    >
-                      {item.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <div className="pb-10" />
           </div>
         </main>
       </div>
