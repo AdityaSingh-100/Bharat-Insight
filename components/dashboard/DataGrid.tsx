@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Pencil,
   Trash2,
+  Lock,
   Search,
   X,
   Filter,
@@ -494,29 +495,28 @@ export function DataGrid({
             )}
           </div>
 
-          {/* Export (admin only) */}
-          {isAdmin && (
-            <button
-              onClick={exportCSV}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all"
-              style={{
-                border: "1px solid var(--color-border)",
-                background: "rgb(255 255 255 / 0.04)",
-                color: "var(--color-muted-foreground)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-org-border)";
-                e.currentTarget.style.color = "var(--color-org-primary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.color = "var(--color-muted-foreground)";
-              }}
-            >
-              <Download size={11} />
-              Export CSV
-            </button>
-          )}
+          {/* Export CSV */}
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all"
+            title={isAdmin ? "Export CSV" : "Export CSV (read-only)"}
+            style={{
+              border: "1px solid var(--color-border)",
+              background: "rgb(255 255 255 / 0.04)",
+              color: "var(--color-muted-foreground)",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-org-border)";
+              e.currentTarget.style.color = "var(--color-org-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-border)";
+              e.currentTarget.style.color = "var(--color-muted-foreground)";
+            }}
+          >
+            <Download size={11} />
+            Export CSV
+          </button>
         </div>
       </div>
 
@@ -562,7 +562,7 @@ export function DataGrid({
                     )}
                   </th>
                 ))}
-                {isAdmin && <th className="w-16 shrink-0" />}
+                <th className="w-16 shrink-0" />
               </tr>
             ))}
           </thead>
@@ -625,46 +625,58 @@ export function DataGrid({
                     </td>
                   ))}
 
-                  {isAdmin && (
-                    <td className="px-2 py-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-16 shrink-0">
-                      <button
-                        className="p-1 rounded transition-colors"
-                        style={{ color: "var(--color-org-primary)" }}
-                        title="Edit row"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit((safePage - 1) * pageSize + idx);
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background =
-                            "var(--color-org-muted)")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
+                  <td className="px-2 py-2.5 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-16 shrink-0">
+                    {isAdmin ? (
+                      <>
+                        <button
+                          className="p-1 rounded transition-colors"
+                          style={{ color: "var(--color-org-primary)" }}
+                          title="Edit row"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit((safePage - 1) * pageSize + idx);
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "var(--color-org-muted)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "transparent")
+                          }
+                        >
+                          <Pencil size={11} />
+                        </button>
+                        <button
+                          className="p-1 rounded transition-colors"
+                          style={{ color: "var(--color-danger)" }}
+                          title="Delete row"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingRowIndex(
+                              (safePage - 1) * pageSize + idx,
+                            );
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background =
+                              "color-mix(in srgb, var(--color-danger) 15%, transparent)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = "transparent")
+                          }
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </>
+                    ) : (
+                      <span
+                        title="Read-only — Viewer access"
+                        className="p-1"
+                        style={{ color: "rgb(255 255 255 / 0.15)" }}
                       >
-                        <Pencil size={11} />
-                      </button>
-                      <button
-                        className="p-1 rounded transition-colors"
-                        style={{ color: "var(--color-danger)" }}
-                        title="Delete row"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeletingRowIndex((safePage - 1) * pageSize + idx);
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background =
-                            "color-mix(in srgb, var(--color-danger) 15%, transparent)")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
-                      >
-                        <Trash2 size={11} />
-                      </button>
-                    </td>
-                  )}
+                        <Lock size={10} />
+                      </span>
+                    )}
+                  </td>
                 </tr>
               );
             })}

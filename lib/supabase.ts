@@ -14,9 +14,11 @@ export type AuthUser = {
   user_metadata: {
     full_name?: string;
     avatar_url?: string;
+    role?: "admin" | "viewer";
   };
 };
 
+// ── OAuth ──────────────────────────────────────────────────────────────────────
 export async function signInWithGoogle(next = "/dashboard") {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -27,6 +29,43 @@ export async function signInWithGoogle(next = "/dashboard") {
   if (error) throw error;
 }
 
+// ── Email / Password ───────────────────────────────────────────────────────────
+export async function signInWithEmail(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw error;
+  return data.session;
+}
+
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  options?: { fullName?: string; role?: "admin" | "viewer" },
+) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: options?.fullName ?? "",
+        role: options?.role ?? "viewer",
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function resetPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+  });
+  if (error) throw error;
+}
+
+// ── Session / Sign-out ─────────────────────────────────────────────────────────
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

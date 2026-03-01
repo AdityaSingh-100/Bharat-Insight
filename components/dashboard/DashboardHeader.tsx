@@ -116,29 +116,197 @@ function OrgSwitcher() {
 }
 
 function RoleBadge() {
-  const { role } = useOrgStore();
+  const { role, setRole } = useOrgStore();
   const isAdmin = role === "admin";
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const PERMISSIONS = {
+    admin: [
+      { label: "View & search data", enabled: true },
+      { label: "Edit rows", enabled: true },
+      { label: "Delete rows", enabled: true },
+      { label: "Export CSV", enabled: true },
+      { label: "AI Insights", enabled: true },
+    ],
+    viewer: [
+      { label: "View & search data", enabled: true },
+      { label: "Edit rows", enabled: false },
+      { label: "Delete rows", enabled: false },
+      { label: "Export CSV", enabled: true },
+      { label: "AI Insights", enabled: true },
+    ],
+  };
+
   return (
-    <div
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium"
-      title={
-        isAdmin ? "Admin — edit & delete enabled" : "Viewer — read-only access"
-      }
-      style={{
-        background: isAdmin
-          ? "var(--color-org-muted)"
-          : "rgb(255 255 255 / 0.04)",
-        border: isAdmin
-          ? "1px solid var(--color-org-border)"
-          : "1px solid var(--color-border)",
-        color: isAdmin
-          ? "var(--color-org-primary)"
-          : "var(--color-muted-foreground)",
-        cursor: "default",
-      }}
-    >
-      {isAdmin ? <Shield size={11} /> : <Eye size={11} />}
-      {isAdmin ? "Admin" : "Viewer"}
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all"
+        style={{
+          background: isAdmin
+            ? "var(--color-org-muted)"
+            : "rgb(255 255 255 / 0.04)",
+          border: isAdmin
+            ? "1px solid var(--color-org-border)"
+            : "1px solid var(--color-border)",
+          color: isAdmin
+            ? "var(--color-org-primary)"
+            : "var(--color-muted-foreground)",
+        }}
+        onMouseEnter={(e) =>
+          ((e.currentTarget as HTMLElement).style.opacity = "0.85")
+        }
+        onMouseLeave={(e) =>
+          ((e.currentTarget as HTMLElement).style.opacity = "1")
+        }
+      >
+        {isAdmin ? <Shield size={11} /> : <Eye size={11} />}
+        {isAdmin ? "Admin" : "Viewer"}
+        <ChevronDown
+          size={10}
+          style={{
+            transform: open ? "rotate(180deg)" : "rotate(0)",
+            transition: "transform 150ms ease",
+            marginLeft: 1,
+          }}
+        />
+      </button>
+
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -6, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.12 }}
+          className="absolute top-full left-0 mt-1.5 w-60 rounded-xl z-50 shadow-2xl overflow-hidden"
+          style={{
+            background: "hsl(224 71% 4.5%)",
+            border: "1px solid var(--color-border)",
+          }}
+        >
+          {/* Current role header */}
+          <div
+            className="px-3.5 py-2.5 flex items-center gap-2"
+            style={{ borderBottom: "1px solid var(--color-border)" }}
+          >
+            {isAdmin ? (
+              <Shield size={13} style={{ color: "var(--color-org-primary)" }} />
+            ) : (
+              <Eye
+                size={13}
+                style={{ color: "var(--color-muted-foreground)" }}
+              />
+            )}
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-white">
+                {isAdmin ? "Administrator" : "Viewer"}
+              </p>
+              <p
+                className="text-[10px]"
+                style={{ color: "var(--color-muted-foreground)" }}
+              >
+                {isAdmin ? "Full data access" : "Read-only access"}
+              </p>
+            </div>
+          </div>
+
+          {/* Permissions list */}
+          <div className="px-3.5 py-2.5 space-y-1.5">
+            <p
+              className="text-[10px] uppercase tracking-wider mb-2"
+              style={{ color: "var(--color-muted-foreground)" }}
+            >
+              Permissions
+            </p>
+            {PERMISSIONS[role].map((p) => (
+              <div key={p.label} className="flex items-center gap-2">
+                <div
+                  className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 text-[8px]"
+                  style={{
+                    background: p.enabled
+                      ? "var(--color-org-muted)"
+                      : "rgb(255 255 255 / 0.04)",
+                    border: p.enabled
+                      ? "1px solid var(--color-org-border)"
+                      : "1px solid rgb(255 255 255 / 0.08)",
+                  }}
+                >
+                  {p.enabled ? (
+                    <span style={{ color: "var(--color-org-primary)" }}>✓</span>
+                  ) : (
+                    <span style={{ color: "rgb(255 255 255 / 0.2)" }}>✕</span>
+                  )}
+                </div>
+                <span
+                  className="text-xs"
+                  style={{
+                    color: p.enabled
+                      ? "rgb(255 255 255 / 0.7)"
+                      : "rgb(255 255 255 / 0.25)",
+                    textDecoration: p.enabled ? "none" : "line-through",
+                  }}
+                >
+                  {p.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Demo toggle */}
+          <div
+            className="px-3.5 py-2.5"
+            style={{ borderTop: "1px solid var(--color-border)" }}
+          >
+            <p
+              className="text-[10px] uppercase tracking-wider mb-2"
+              style={{ color: "var(--color-muted-foreground)" }}
+            >
+              Demo toggle
+            </p>
+            <div
+              className="flex rounded-lg overflow-hidden"
+              style={{ border: "1px solid var(--color-border)" }}
+            >
+              {(["admin", "viewer"] as const).map((r) => (
+                <button
+                  key={r}
+                  onClick={() => {
+                    setRole(r);
+                    setOpen(false);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-all capitalize"
+                  style={{
+                    background:
+                      role === r ? "var(--color-org-muted)" : "transparent",
+                    color:
+                      role === r
+                        ? "var(--color-org-primary)"
+                        : "var(--color-muted-foreground)",
+                  }}
+                >
+                  {r === "admin" ? <Shield size={10} /> : <Eye size={10} />}
+                  {r}
+                </button>
+              ))}
+            </div>
+            <p
+              className="text-[10px] mt-2"
+              style={{ color: "rgb(255 255 255 / 0.2)" }}
+            >
+              Production role is set via Supabase user metadata.
+            </p>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

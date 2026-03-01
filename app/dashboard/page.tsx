@@ -25,6 +25,7 @@ import {
   Brain,
   Filter,
   ArrowRight,
+  Eye,
 } from "lucide-react";
 import type { DatasetSummary } from "@/lib/csv-engine";
 
@@ -203,7 +204,7 @@ const HELP_ITEMS = [
 
 // ─── Dashboard page ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { currentOrg, syncRoleFromAuth } = useOrgStore();
+  const { currentOrg, syncRoleFromAuth, role } = useOrgStore();
   const { dataset, filterOptions, isLoading, activeFile } = useDatasetStore();
 
   const [filteredCount, setFilteredCount] = useState(0);
@@ -309,6 +310,25 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         <main className="pt-14">
+          {/* Viewer-mode read-only banner */}
+          {role === "viewer" && (
+            <div
+              className="flex items-center gap-2.5 px-5 py-2.5 text-xs"
+              style={{
+                background: "rgb(251 191 36 / 0.07)",
+                borderBottom: "1px solid rgb(251 191 36 / 0.15)",
+                color: "rgb(251 191 36 / 0.85)",
+              }}
+            >
+              <Eye size={13} className="shrink-0" />
+              <span>
+                <strong>Read-only mode</strong> — editing and deletion are
+                disabled for Viewer accounts. Switch to Admin in the role badge
+                above to enable data modifications.
+              </span>
+            </div>
+          )}
+
           <div className="p-5 space-y-5">
             {/* Overview section */}
             <div
