@@ -35,6 +35,7 @@ export function CommandPalette() {
     setAIPanelOpen,
     currentOrg,
     role,
+    authRole,
   } = useOrgStore();
   const { availableFiles, activeFile, loadFile } = useDatasetStore();
 
@@ -86,31 +87,35 @@ export function CommandPalette() {
       },
     })),
 
-    // Role
-    {
-      id: "role-admin",
-      label: "Set Role: Admin",
-      description: "Enable edit and delete controls",
-      icon: Shield,
-      category: "Access",
-      isActive: role === "admin",
-      action: () => {
-        setRole("admin");
-        setCommandPalette(false);
-      },
-    },
-    {
-      id: "role-viewer",
-      label: "Set Role: Viewer",
-      description: "Read-only mode",
-      icon: Eye,
-      category: "Access",
-      isActive: role === "viewer",
-      action: () => {
-        setRole("viewer");
-        setCommandPalette(false);
-      },
-    },
+    // Role — only show for admins
+    ...(authRole === "admin"
+      ? [
+          {
+            id: "role-admin",
+            label: "Set Role: Admin",
+            description: "Enable edit and delete controls",
+            icon: Shield,
+            category: "Access",
+            isActive: role === "admin",
+            action: () => {
+              setRole("admin");
+              setCommandPalette(false);
+            },
+          },
+          {
+            id: "role-viewer",
+            label: "Set Role: Viewer",
+            description: "Read-only mode",
+            icon: Eye,
+            category: "Access",
+            isActive: role === "viewer",
+            action: () => {
+              setRole("viewer");
+              setCommandPalette(false);
+            },
+          },
+        ]
+      : []),
 
     // Data
     {

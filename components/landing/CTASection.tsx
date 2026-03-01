@@ -146,8 +146,6 @@ export function CTASection() {
               <div className="flex items-center gap-3">
                 {[
                   { icon: Github, href: "https://github.com", label: "GitHub" },
-                  { icon: Twitter, href: "#", label: "Twitter" },
-                  { icon: Linkedin, href: "#", label: "LinkedIn" },
                   {
                     icon: Mail,
                     href: "mailto:contact@bharatinsight.dev",

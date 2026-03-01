@@ -124,7 +124,7 @@ function OrgSwitcher() {
 }
 
 function RoleBadge() {
-  const { role, setRole } = useOrgStore();
+  const { role, setRole, authRole } = useOrgStore();
   const isAdmin = role === "admin";
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -269,50 +269,64 @@ function RoleBadge() {
             ))}
           </div>
 
-          {/* Demo toggle */}
-          <div
-            className="px-3.5 py-2.5"
-            style={{ borderTop: "1px solid var(--color-border)" }}
-          >
-            <p
-              className="text-[10px] uppercase tracking-wider mb-2"
-              style={{ color: "var(--color-muted-foreground)" }}
-            >
-              Demo toggle
-            </p>
+          {/* Role toggle — only for admins */}
+          {authRole === "admin" ? (
             <div
-              className="flex rounded-lg overflow-hidden"
-              style={{ border: "1px solid var(--color-border)" }}
+              className="px-3.5 py-2.5"
+              style={{ borderTop: "1px solid var(--color-border)" }}
             >
-              {(["admin", "viewer"] as const).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => {
-                    setRole(r);
-                    setOpen(false);
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-all capitalize"
-                  style={{
-                    background:
-                      role === r ? "var(--color-org-muted)" : "transparent",
-                    color:
-                      role === r
-                        ? "var(--color-org-primary)"
-                        : "var(--color-muted-foreground)",
-                  }}
-                >
-                  {r === "admin" ? <Shield size={10} /> : <Eye size={10} />}
-                  {r}
-                </button>
-              ))}
+              <p
+                className="text-[10px] uppercase tracking-wider mb-2"
+                style={{ color: "var(--color-muted-foreground)" }}
+              >
+                Switch active role
+              </p>
+              <div
+                className="flex rounded-lg overflow-hidden"
+                style={{ border: "1px solid var(--color-border)" }}
+              >
+                {(["admin", "viewer"] as const).map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      setRole(r);
+                      setOpen(false);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium transition-all capitalize"
+                    style={{
+                      background:
+                        role === r ? "var(--color-org-muted)" : "transparent",
+                      color:
+                        role === r
+                          ? "var(--color-org-primary)"
+                          : "var(--color-muted-foreground)",
+                    }}
+                  >
+                    {r === "admin" ? <Shield size={10} /> : <Eye size={10} />}
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <p
+                className="text-[10px] mt-2"
+                style={{ color: "rgb(255 255 255 / 0.2)" }}
+              >
+                Preview how the app looks in viewer mode.
+              </p>
             </div>
-            <p
-              className="text-[10px] mt-2"
-              style={{ color: "rgb(255 255 255 / 0.2)" }}
+          ) : (
+            <div
+              className="px-3.5 py-2.5"
+              style={{ borderTop: "1px solid var(--color-border)" }}
             >
-              Production role is set via Supabase user metadata.
-            </p>
-          </div>
+              <p
+                className="text-[10px]"
+                style={{ color: "rgb(255 255 255 / 0.25)" }}
+              >
+                Role is managed by your system administrator.
+              </p>
+            </div>
+          )}
         </motion.div>
       )}
     </div>

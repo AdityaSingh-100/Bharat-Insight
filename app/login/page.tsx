@@ -221,7 +221,6 @@ function LoginPageInner() {
   const [suEmail, setSuEmail] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suShowPw, setSuShowPw] = useState(false);
-  const [suRole, setSuRole] = useState<"admin" | "viewer">("viewer");
 
   // Forgot password
   const [fpEmail, setFpEmail] = useState("");
@@ -272,7 +271,6 @@ function LoginPageInner() {
     try {
       const result = await signUpWithEmail(suEmail, suPassword, {
         fullName: suName,
-        role: suRole,
       });
       if (result.user && !result.session) {
         setStatus({
@@ -558,51 +556,8 @@ function LoginPageInner() {
                     }
                   />
 
-                  {/* Role selector */}
-                  <div className="space-y-1.5">
-                    <span
-                      className="text-xs font-medium"
-                      style={{ color: "rgb(255 255 255 / 0.5)" }}
-                    >
-                      Access level
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {(["admin", "viewer"] as const).map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => setSuRole(r)}
-                          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all"
-                          style={{
-                            background:
-                              suRole === r
-                                ? "hsl(217 91% 60% / 0.12)"
-                                : "rgb(255 255 255 / 0.04)",
-                            border:
-                              suRole === r
-                                ? "1px solid hsl(217 91% 60% / 0.35)"
-                                : "1px solid rgb(255 255 255 / 0.08)",
-                            color:
-                              suRole === r
-                                ? "hsl(217 91% 70%)"
-                                : "rgb(255 255 255 / 0.45)",
-                          }}
-                        >
-                          {r === "admin" ? (
-                            <Shield size={12} />
-                          ) : (
-                            <Eye size={12} />
-                          )}
-                          <div className="text-left">
-                            <div className="font-semibold capitalize">{r}</div>
-                            <div className="text-[10px] opacity-70 mt-0.5">
-                              {r === "admin" ? "Edit & delete" : "Read-only"}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Role selector removed — all new accounts are Viewer by default.
+                      Admin access is granted by a system administrator. */}
 
                   <button
                     type="submit"
@@ -767,8 +722,9 @@ function LoginPageInner() {
             className="text-[10px] pt-1"
             style={{ color: "rgb(255 255 255 / 0.25)" }}
           >
-            Role is stored in your Supabase auth metadata and synced on every
-            sign-in.
+            New accounts start as <span className="text-white/40">Viewer</span>.
+            Admin access is granted by a system administrator via the Supabase
+            dashboard.
           </p>
         </div>
 

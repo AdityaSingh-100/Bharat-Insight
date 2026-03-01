@@ -45,6 +45,8 @@ interface ActiveFilters {
 interface OrgState {
   currentOrg: OrgId;
   role: Role;
+  /** The immutable role from Supabase user_metadata — source of truth */
+  authRole: Role;
   isAIPanelOpen: boolean;
   isCommandPaletteOpen: boolean;
   isMobileSidebarOpen: boolean;
@@ -53,6 +55,7 @@ interface OrgState {
   globalSearch: string;
 
   setOrg: (org: OrgId) => void;
+  /** Only admins can override their active role (e.g. to preview viewer mode) */
   setRole: (role: Role) => void;
   syncRoleFromAuth: (role?: string | null) => void;
   toggleAIPanel: () => void;
@@ -69,7 +72,8 @@ export const useOrgStore = create<OrgState>()(
   persist(
     (set, get) => ({
       currentOrg: "health",
-      role: "admin",
+      role: "viewer",
+      authRole: "viewer",
       isAIPanelOpen: false,
       isCommandPaletteOpen: false,
       isMobileSidebarOpen: false,
@@ -101,14 +105,21 @@ export const useOrgStore = create<OrgState>()(
         });
       },
 
-      setRole: (role) => set({ role }),
+      setRole: (role) => {
+        // Only admins can override the active role (e.g. to preview viewer mode)
+        if (get().authRole === "admin") {
+          set({ role });
+        }
+      },
 
-      // Sync role from Supabase user_metadata — falls back to current role
+      // Sync role from Supabase user_metadata — sets both authRole and active role
       syncRoleFromAuth: (roleFromMeta) => {
         if (roleFromMeta === "admin" || roleFromMeta === "viewer") {
-          set({ role: roleFromMeta });
+          set({ authRole: roleFromMeta, role: roleFromMeta });
+        } else {
+          // No role in metadata → default to viewer
+          set({ authRole: "viewer", role: "viewer" });
         }
-        // If metadata has no role, keep the existing persisted role
       },
       toggleAIPanel: () => set((s) => ({ isAIPanelOpen: !s.isAIPanelOpen })),
       setAIPanelOpen: (open) => set({ isAIPanelOpen: open }),
@@ -129,14 +140,32 @@ export const useOrgStore = create<OrgState>()(
     {
       name: "bharat-insight-org",
       version: 2,
-      partialize: (s) => ({ currentOrg: s.currentOrg, role: s.role }),
+      partialize: (s) => ({
+        currentOrg: s.currentOrg,
+        role: s.role,
+        authRole: s.authRole,
+      }),
       migrate: (persisted: unknown) => {
-        const s = persisted as { currentOrg?: string; role?: string };
+        const s = persisted as {
+          currentOrg?: string;
+          role?: string;
+          authRole?: string;
+        };
         const validOrg =
           s.currentOrg && s.currentOrg in ORG_CONFIGS
             ? (s.currentOrg as OrgId)
             : "health";
-        return { currentOrg: validOrg, role: s.role ?? "admin" };
+        const validRole =
+          s.role === "admin" || s.role === "viewer" ? s.role : "viewer";
+        const validAuthRole =
+          s.authRole === "admin" || s.authRole === "viewer"
+            ? s.authRole
+            : "viewer";
+        return {
+          currentOrg: validOrg,
+          role: validRole,
+          authRole: validAuthRole,
+        };
       },
     },
   ),

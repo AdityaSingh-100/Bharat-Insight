@@ -6,7 +6,7 @@ import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 import { useDatasetStore } from "@/store/useDatasetStore";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { supabase, signOut } from "@/lib/supabase";
+import { supabase, signOut, fetchProfile } from "@/lib/supabase";
 import {
   Settings,
   User,
@@ -78,7 +78,8 @@ function SettingsSection({
 // ─── Settings Page ─────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const router = useRouter();
-  const { currentOrg, role, setOrg, setRole, syncRoleFromAuth } = useOrgStore();
+  const { currentOrg, role, authRole, setOrg, setRole, syncRoleFromAuth } =
+    useOrgStore();
   const { availableFiles, activeFile, loadFile, fetchAvailableFiles } =
     useDatasetStore();
 
@@ -98,9 +99,21 @@ export default function SettingsPage() {
           name: session.user.user_metadata?.full_name ?? undefined,
           avatar: session.user.user_metadata?.avatar_url ?? undefined,
         });
-        syncRoleFromAuth(
-          session.user.user_metadata?.role as string | undefined,
-        );
+      }
+    });
+    // Sync role from profiles table
+    fetchProfile().then((profile) => {
+      if (profile) {
+        syncRoleFromAuth(profile.role);
+      } else {
+        // Fallback to user_metadata if profiles table doesn't exist yet
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            syncRoleFromAuth(
+              session.user.user_metadata?.role as string | undefined,
+            );
+          }
+        });
       }
     });
   }, [syncRoleFromAuth]);
@@ -471,43 +484,78 @@ export default function SettingsPage() {
                     </span>
                   </div>
 
-                  {/* Role toggle (dev/demo convenience) */}
-                  <div
-                    className="rounded-lg p-3 space-y-2"
-                    style={{
-                      background: "rgb(255 255 255 / 0.025)",
-                      border: "1px solid var(--color-border)",
-                    }}
-                  >
-                    <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-2">
-                      Demo role override
-                    </p>
-                    <div className="flex gap-2">
-                      {(["admin", "viewer"] as const).map((r) => (
-                        <button
-                          key={r}
-                          onClick={() => setRole(r)}
-                          className="px-4 py-2 rounded-lg text-xs font-medium capitalize transition-all"
-                          style={{
-                            background:
-                              role === r
-                                ? "var(--color-org-muted)"
-                                : "rgb(255 255 255 / 0.03)",
-                            border:
-                              role === r
-                                ? "1px solid var(--color-org-border)"
-                                : "1px solid var(--color-border)",
-                            color:
-                              role === r
-                                ? "var(--color-org-primary)"
-                                : "var(--color-muted-foreground)",
-                          }}
-                        >
-                          {r}
-                        </button>
-                      ))}
+                  {/* Role toggle — only admins can switch (e.g. preview viewer mode) */}
+                  {authRole === "admin" ? (
+                    <div
+                      className="rounded-lg p-3 space-y-2"
+                      style={{
+                        background: "rgb(255 255 255 / 0.025)",
+                        border: "1px solid var(--color-border)",
+                      }}
+                    >
+                      <p className="text-xs font-medium text-white/50 uppercase tracking-wider mb-2">
+                        Switch active role
+                      </p>
+                      <div className="flex gap-2">
+                        {(["admin", "viewer"] as const).map((r) => (
+                          <button
+                            key={r}
+                            onClick={() => setRole(r)}
+                            className="px-4 py-2 rounded-lg text-xs font-medium capitalize transition-all"
+                            style={{
+                              background:
+                                role === r
+                                  ? "var(--color-org-muted)"
+                                  : "rgb(255 255 255 / 0.03)",
+                              border:
+                                role === r
+                                  ? "1px solid var(--color-org-border)"
+                                  : "1px solid var(--color-border)",
+                              color:
+                                role === r
+                                  ? "var(--color-org-primary)"
+                                  : "var(--color-muted-foreground)",
+                            }}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                      <p
+                        className="text-[11px] mt-1"
+                        style={{ color: "var(--color-muted-foreground)" }}
+                      >
+                        Preview how the app looks in viewer mode. Your admin
+                        access is preserved.
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div
+                      className="rounded-lg px-4 py-3 flex items-start gap-2.5"
+                      style={{
+                        background: "rgb(255 255 255 / 0.025)",
+                        border: "1px solid var(--color-border)",
+                      }}
+                    >
+                      <Lock
+                        size={13}
+                        className="mt-0.5 shrink-0"
+                        style={{ color: "var(--color-muted-foreground)" }}
+                      />
+                      <p
+                        className="text-xs"
+                        style={{ color: "var(--color-muted-foreground)" }}
+                      >
+                        Your role is{" "}
+                        <span className="text-white/70 font-medium">
+                          Viewer
+                        </span>{" "}
+                        (read-only). To request admin access, contact your
+                        system administrator. Roles are managed in the Supabase
+                        dashboard.
+                      </p>
+                    </div>
+                  )}
 
                   <div
                     className="text-xs rounded-lg px-3 py-2"

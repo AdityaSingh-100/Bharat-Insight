@@ -60,7 +60,7 @@ export async function signInWithEmail(email: string, password: string) {
 export async function signUpWithEmail(
   email: string,
   password: string,
-  options?: { fullName?: string; role?: "admin" | "viewer" },
+  options?: { fullName?: string },
 ) {
   const redirectTo = `${appOrigin()}/auth/callback?next=/dashboard`;
 
@@ -71,7 +71,8 @@ export async function signUpWithEmail(
       emailRedirectTo: redirectTo,
       data: {
         full_name: options?.fullName ?? "",
-        role: options?.role ?? "viewer",
+        // Role is managed via the `profiles` table, not user_metadata.
+        // The DB trigger auto-creates a profile row with role = "viewer".
       },
     },
   });
@@ -97,4 +98,35 @@ export async function getSession() {
     data: { session },
   } = await supabase.auth.getSession();
   return session;
+}
+
+// ── Profiles table ─────────────────────────────────────────────────────────────
+export interface Profile {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: "admin" | "viewer";
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Fetch the profile row for the current user from the `profiles` table.
+ * Returns null if no row exists (e.g. table not yet created).
+ */
+export async function fetchProfile(): Promise<Profile | null> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", session.user.id)
+    .single();
+
+  if (error || !data) return null;
+  return data as Profile;
 }

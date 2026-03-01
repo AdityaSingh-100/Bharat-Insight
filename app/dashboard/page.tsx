@@ -10,7 +10,7 @@ import { DataGrid } from "@/components/dashboard/DataGrid";
 import { AIPanel } from "@/components/dashboard/AIPanel";
 import { CommandPalette } from "@/components/dashboard/CommandPalette";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import { supabase } from "@/lib/supabase";
+import { supabase, fetchProfile } from "@/lib/supabase";
 import {
   FileSpreadsheet,
   Database,
@@ -197,13 +197,20 @@ export default function DashboardPage() {
     [],
   );
 
-  // Sync role from Supabase auth metadata on mount
+  // Sync role from profiles table on mount
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        syncRoleFromAuth(
-          session.user.user_metadata?.role as string | undefined,
-        );
+    fetchProfile().then((profile) => {
+      if (profile) {
+        syncRoleFromAuth(profile.role);
+      } else {
+        // Fallback to user_metadata if profiles table doesn't exist yet
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            syncRoleFromAuth(
+              session.user.user_metadata?.role as string | undefined,
+            );
+          }
+        });
       }
     });
   }, [syncRoleFromAuth]);
