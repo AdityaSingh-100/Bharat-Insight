@@ -280,10 +280,18 @@ export default function LoginPage() {
         router.replace(redirect);
       }
     } catch (err) {
-      setStatus({
-        type: "error",
-        msg: err instanceof Error ? err.message : "Sign-up failed",
-      });
+      const raw = err instanceof Error ? err.message : "Sign-up failed";
+      // Make common Supabase auth errors human-readable
+      const msg = raw.toLowerCase().includes("user already registered")
+        ? "An account with this email already exists. Try signing in."
+        : raw.toLowerCase().includes("password should be at least")
+          ? "Password must be at least 6 characters."
+          : raw.toLowerCase().includes("unable to validate email")
+            ? "Please enter a valid email address."
+            : raw.toLowerCase().includes("signup is disabled")
+              ? "Sign-ups are currently disabled. Contact the administrator."
+              : raw;
+      setStatus({ type: "error", msg });
     } finally {
       setLoading(false);
     }
