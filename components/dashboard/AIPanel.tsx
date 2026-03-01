@@ -418,7 +418,21 @@ export function AIPanel({
                         </div>
                       ) : (
                         <span className="whitespace-pre-wrap">
-                          {msg.content}
+                          {msg.content
+                            .split(/(^[A-Z][A-Z ]+:)/m)
+                            .map((part, idx) =>
+                              /^[A-Z][A-Z ]+:$/.test(part.trim()) ? (
+                                <span
+                                  key={idx}
+                                  className="block text-[10px] font-semibold tracking-widest mt-2 mb-0.5 first:mt-0"
+                                  style={{ color: "var(--color-org-primary)" }}
+                                >
+                                  {part.trim()}
+                                </span>
+                              ) : (
+                                <span key={idx}>{part}</span>
+                              ),
+                            )}
                           {msg.isStreaming && (
                             <span
                               className="inline-block w-0.5 h-3.5 ml-0.5 align-middle animate-pulse"

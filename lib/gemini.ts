@@ -49,7 +49,7 @@ function buildPrompt(opts: GeminiStreamOptions): string {
         `  ${col}: ${s.uniqueCount} unique values, top: ${s.topValues?.join(", ")}`,
     );
 
-  return `You are a world-class data analyst assistant for ${orgName}.
+  return `You are a concise data analyst assistant for ${orgName}.
 
 DATASET: "${filename}"
 COLUMNS: ${summary.columnCount} columns · Numeric: ${summary.numericColumns.join(", ")} · Categorical: ${summary.categoricalColumns.join(", ")}
@@ -67,13 +67,13 @@ ${catStatsLines.join("\n") || "  No categorical columns"}
 
 QUESTION: ${userQuestion}
 
-Respond with:
-1. Direct, specific answer referencing actual numbers from the statistics above
-2. Key patterns or anomalies visible in the data
-3. 2-3 actionable recommendations
-4. Any data quality observations
-
-Be concise, analytical, and data-driven. Format with clear sections using **bold** headers.`;
+Rules:
+- Reply in plain text only — no markdown, no asterisks, no bullet symbols, no numbered lists
+- Use short paragraphs separated by a blank line
+- Label sections with ALL-CAPS words like: SUMMARY, PATTERNS, RECOMMENDATIONS — followed by a colon on the same line, then the text on the next line
+- Keep each section to 2-4 sentences max
+- Cite actual numbers from the statistics; skip generic filler phrases
+- Total response must be under 200 words`;
 }
 
 // Models to try in order — falls back if quota exceeded
@@ -216,41 +216,28 @@ export async function* mockGeminiStream(
     .slice(0, 3)
     .map(
       ([col, s]) =>
-        `**${col}**: avg ${s.mean?.toFixed?.(2) ?? s.mean}, range ${s.min?.toFixed?.(2)} – ${s.max?.toFixed?.(2)}`,
+        `${col}: avg ${s.mean?.toFixed?.(2) ?? s.mean}, range ${s.min?.toFixed?.(2)} – ${s.max?.toFixed?.(2)}`,
     )
-    .join("\n");
+    .join("  |  ");
 
   const topCats = Object.entries(opts.summary.statistics)
     .filter(([, s]) => s.topValues)
     .slice(0, 2)
-    .map(
-      ([col, s]) =>
-        `**${col}**: top values are ${s.topValues?.slice(0, 3).join(", ")}`,
-    )
-    .join("\n");
+    .map(([col, s]) => `${col}: ${s.topValues?.slice(0, 3).join(", ")}`)
+    .join("  |  ");
 
-  const response = `## Analysis: ${opts.userQuestion}
+  const response = `SUMMARY:
+${opts.filteredRowCount.toLocaleString()} of ${opts.totalRowCount.toLocaleString()} rows shown (${((opts.filteredRowCount / opts.totalRowCount) * 100).toFixed(1)}%). ${filterDesc}
 
-**Dataset Context**
-File: \`${opts.filename}\` · ${opts.filteredRowCount.toLocaleString()} of ${opts.totalRowCount.toLocaleString()} rows visible (${((opts.filteredRowCount / opts.totalRowCount) * 100).toFixed(1)}%). ${filterDesc}
+PATTERNS:
+${numStats || "No numeric columns detected."}
+${topCats ? topCats + "\n" : ""}The filtered view has ${opts.summary.numericColumns.length} numeric and ${opts.summary.categoricalColumns.length} categorical columns available.
 
-**Numeric Statistics (current view)**
-${numStats || "No numeric columns detected in this dataset."}
+RECOMMENDATIONS:
+Use column filters to drill into specific segments. Sort columns by clicking headers to surface top and bottom performers.
 
-**Categorical Breakdown**
-${topCats || "No categorical columns detected."}
-
-**Key Observations**
-• The filtered view represents ${((opts.filteredRowCount / opts.totalRowCount) * 100).toFixed(1)}% of your total dataset — ${opts.filteredRowCount < opts.totalRowCount ? "narrow your filters further to isolate specific segments" : "broaden filters to compare across segments"}
-• ${opts.summary.numericColumns.length} numeric indicators available for trend analysis
-• ${opts.summary.categoricalColumns.length} categorical dimensions available for segmentation
-
-**Recommendations**
-1. Use the **column filters** above the table to drill into specific categories
-2. Sort columns by clicking headers to surface top/bottom performers
-3. Export filtered data as CSV for external analysis
-
-_This is a demo response. Add your Gemini API key to \`.env.local\` for AI-powered analysis._`;
+NOTE:
+This is a demo response. Add your Gemini API key to .env.local for AI-powered analysis.`;
 
   const words = response.split(" ");
   for (const word of words) {
