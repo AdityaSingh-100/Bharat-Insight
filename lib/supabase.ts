@@ -1,14 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-const supabaseUrl ="https://gzeucfosclpdubaxxbmk.supabase.co";
-const supabaseAnonKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6ZXVjZm9zY2xwZHViYXh4Ym1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTk5MDcsImV4cCI6MjA4Nzg3NTkwN30.2f3qRZuioOENp9DPFmL-TsL3iGPL1eKwxicgSR21En0";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || supabaseUrl === "https://placeholder.supabase.co") {
+if (!supabaseUrl) {
   throw new Error(
     "[supabase] NEXT_PUBLIC_SUPABASE_URL is not set. Add it to your .env file and restart the dev server.",
   );
 }
-if (!supabaseAnonKey || supabaseAnonKey === "placeholder-key") {
+if (!supabaseAnonKey) {
   throw new Error(
     "[supabase] NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Add it to your .env file and restart the dev server.",
   );
