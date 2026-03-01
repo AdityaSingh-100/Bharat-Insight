@@ -54,7 +54,7 @@ function BentoCard({ item }: { item: BentoItem }) {
       ref={ref}
       className={cn(
         "bento-item flex flex-col gap-4 min-h-40",
-        item.colSpan === 2 && "col-span-2",
+        item.colSpan === 2 && "sm:col-span-2",
         item.rowSpan === 2 && "row-span-2",
         item.hasPersistentHover && "bento-item--active",
       )}

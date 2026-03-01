@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Shield,
@@ -349,15 +350,13 @@ function LoginPageInner() {
             href="/"
             className="inline-flex flex-col items-center gap-3 group"
           >
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105"
-              style={{
-                background: "hsl(217 91% 60% / 0.12)",
-                border: "1px solid hsl(217 91% 60% / 0.25)",
-              }}
-            >
-              <Shield size={20} style={{ color: "hsl(217 91% 60%)" }} />
-            </div>
+            <Image
+              src="/logo2.png"
+              alt="Bharat-Insight"
+              width={48}
+              height={48}
+              className="rounded-2xl group-hover:opacity-90 transition-opacity drop-shadow-[0_0_12px_rgba(56,189,248,0.4)]"
+            />
             <div>
               <h1 className="text-lg font-bold text-white tracking-tight">
                 Bharat
