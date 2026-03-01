@@ -3,7 +3,15 @@
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Github, Twitter, Linkedin, Mail, ExternalLink } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowRight,
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
+  ExternalLink,
+} from "lucide-react";
 
 export function CTASection() {
   const ref = useRef(null);
@@ -15,8 +23,10 @@ export function CTASection() {
       <div className="relative py-32">
         {/* Background effects */}
         <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[450px] rounded-full bg-blue-600/[0.06] blur-[150px]" />
-          <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full bg-indigo-600/[0.04] blur-[100px]" />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[450px] rounded-full opacity-[0.06] blur-[150px]"
+            style={{ background: "var(--color-org-primary)" }}
+          />
         </div>
         <div className="absolute inset-0 dot-bg opacity-30" />
 
@@ -32,16 +42,24 @@ export function CTASection() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={inView ? { opacity: 1, scale: 1 } : {}}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/15 bg-blue-500/[0.06] text-blue-400 text-sm mb-8"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm mb-8"
+              style={{
+                border: "1px solid var(--color-org-border)",
+                background: "var(--color-org-muted)",
+                color: "var(--color-org-primary)",
+              }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "var(--color-org-primary)" }}
+              />
               Open Source & Free
             </motion.div>
 
             <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.05] font-inter tracking-tight">
               Ready to explore
               <br />
-              <span className="text-gradient-animated">India&apos;s data?</span>
+              <span className="text-gradient">India&apos;s data?</span>
             </h2>
             <p className="text-white/35 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
               Launch the dashboard and start analyzing 100,000+ government data
@@ -49,10 +67,11 @@ export function CTASection() {
             </p>
 
             {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/dashboard"
-                className="group inline-flex items-center justify-center gap-2.5 px-10 py-4.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-lg transition-all duration-300 shadow-xl shadow-blue-600/20 hover:shadow-blue-500/30 hover:scale-[1.02]"
+                className="group inline-flex items-center justify-center gap-2.5 px-10 py-4.5 rounded-2xl text-white font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-[1.02]"
+                style={{ background: "var(--color-org-primary)" }}
               >
                 Launch Dashboard
                 <ArrowRight
@@ -69,7 +88,7 @@ export function CTASection() {
                 <Github size={18} />
                 View Source
               </a>
-            </div>
+            </div> */}
 
             {/* Tech stack badges */}
             <motion.div
@@ -105,12 +124,19 @@ export function CTASection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             {/* Branding */}
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
-                  B
-                </div>
+              <div className="flex items-center gap-3 mb-4">
+                <Image
+                  src="/logo2.png"
+                  alt="Bharat-Insight"
+                  width={44}
+                  height={44}
+                  className="rounded-xl drop-shadow-[0_0_10px_rgba(56,189,248,0.35)]"
+                />
                 <span className="text-white font-bold text-lg tracking-tight">
-                  Bharat<span className="text-blue-400">-Insight</span>
+                  Bharat
+                  <span style={{ color: "var(--color-org-primary)" }}>
+                    -Insight
+                  </span>
                 </span>
               </div>
               <p className="text-white/30 text-sm leading-relaxed mb-5 max-w-xs">
@@ -122,7 +148,11 @@ export function CTASection() {
                   { icon: Github, href: "https://github.com", label: "GitHub" },
                   { icon: Twitter, href: "#", label: "Twitter" },
                   { icon: Linkedin, href: "#", label: "LinkedIn" },
-                  { icon: Mail, href: "mailto:contact@bharatinsight.dev", label: "Email" },
+                  {
+                    icon: Mail,
+                    href: "mailto:contact@bharatinsight.dev",
+                    label: "Email",
+                  },
                 ].map(({ icon: Icon, href, label }) => (
                   <a
                     key={label}
@@ -171,7 +201,11 @@ export function CTASection() {
                 {[
                   { label: "Documentation", href: "#" },
                   { label: "API Reference", href: "#" },
-                  { label: "GitHub Repo", href: "https://github.com", external: true },
+                  {
+                    label: "GitHub Repo",
+                    href: "https://github.com",
+                    external: true,
+                  },
                   { label: "Release Notes", href: "#" },
                 ].map((link) => (
                   <li key={link.label}>
@@ -215,9 +249,7 @@ export function CTASection() {
 
           {/* Bottom bar */}
           <div className="pt-8 border-t border-white/[0.05] flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-white/20 text-sm">
-              © 2026 Bharat-Insight — Built for Regrip India Pvt. Ltd.
-            </div>
+            <div className="text-white/20 text-sm">© 2026 Bharat-Insight</div>
             <div className="flex items-center gap-3 text-white/20 text-xs">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60" />

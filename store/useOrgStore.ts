@@ -1,6 +1,8 @@
 // store/useOrgStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { HeartPulse, Wheat } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export type OrgId = "health" | "agriculture";
 export type Role = "admin" | "viewer";
@@ -11,7 +13,7 @@ export interface OrgConfig {
   shortName: string;
   description: string;
   themeClass: string;
-  icon: string;
+  icon: LucideIcon;
   defaultDataset: string;
 }
 
@@ -22,7 +24,7 @@ export const ORG_CONFIGS: Record<OrgId, OrgConfig> = {
     shortName: "MoHFW",
     description: "Health & Family Welfare",
     themeClass: "",
-    icon: "🏥",
+    icon: HeartPulse,
     defaultDataset: "health_data.csv",
   },
   agriculture: {
@@ -31,7 +33,7 @@ export const ORG_CONFIGS: Record<OrgId, OrgConfig> = {
     shortName: "MoA",
     description: "Farming & Rural Economy",
     themeClass: "org-agriculture",
-    icon: "🌾",
+    icon: Wheat,
     defaultDataset: "agriculture_data.csv",
   },
 };
@@ -45,6 +47,7 @@ interface OrgState {
   role: Role;
   isAIPanelOpen: boolean;
   isCommandPaletteOpen: boolean;
+  isMobileSidebarOpen: boolean;
   // Generic column-keyed filters
   activeFilters: ActiveFilters;
   globalSearch: string;
@@ -55,6 +58,7 @@ interface OrgState {
   toggleAIPanel: () => void;
   setAIPanelOpen: (open: boolean) => void;
   setCommandPalette: (open: boolean) => void;
+  setMobileSidebar: (open: boolean) => void;
   setColumnFilter: (key: string, value: string) => void;
   setGlobalSearch: (q: string) => void;
   clearFilters: () => void;
@@ -68,6 +72,7 @@ export const useOrgStore = create<OrgState>()(
       role: "admin",
       isAIPanelOpen: false,
       isCommandPaletteOpen: false,
+      isMobileSidebarOpen: false,
       activeFilters: {},
       globalSearch: "",
 
@@ -108,6 +113,7 @@ export const useOrgStore = create<OrgState>()(
       toggleAIPanel: () => set((s) => ({ isAIPanelOpen: !s.isAIPanelOpen })),
       setAIPanelOpen: (open) => set({ isAIPanelOpen: open }),
       setCommandPalette: (open) => set({ isCommandPaletteOpen: open }),
+      setMobileSidebar: (open) => set({ isMobileSidebarOpen: open }),
 
       setColumnFilter: (key, value) =>
         set((s) => ({

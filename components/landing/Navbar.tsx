@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Github, Menu, X } from "lucide-react";
+import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -13,6 +15,17 @@ const NAV_LINKS = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { currentOrg } = useOrgStore();
+
+  // Sync org theme class onto <html>
+  useEffect(() => {
+    const allClasses = Object.values(ORG_CONFIGS)
+      .map((o) => o.themeClass)
+      .filter(Boolean);
+    document.documentElement.classList.remove(...allClasses);
+    const themeClass = ORG_CONFIGS[currentOrg]?.themeClass;
+    if (themeClass) document.documentElement.classList.add(themeClass);
+  }, [currentOrg]);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -33,12 +46,17 @@ export function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
-            B
-          </div>
+        <Link href="/" className="flex items-center gap-3 group">
+          <Image
+            src="/logo2.png"
+            alt="Bharat-Insight"
+            width={44}
+            height={44}
+            className="rounded-xl group-hover:opacity-90 transition-opacity drop-shadow-[0_0_10px_rgba(56,189,248,0.35)]"
+          />
           <span className="text-white font-bold text-lg tracking-tight">
-            Bharat<span className="text-blue-400">-Insight</span>
+            Bharat
+            <span style={{ color: "var(--color-org-primary)" }}>-Insight</span>
           </span>
         </Link>
 
@@ -68,7 +86,8 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all duration-300 shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30"
+            className="hidden md:inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-300 shadow-lg hover:opacity-90 hover:scale-[1.02]"
+            style={{ background: "var(--color-org-primary)" }}
           >
             Launch App
             <ArrowRight size={14} />

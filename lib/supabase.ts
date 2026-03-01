@@ -27,12 +27,21 @@ export type AuthUser = {
   };
 };
 
+// Use the stable app URL from env so the port never mismatches what Supabase allows.
+// Falls back to window.location.origin only if the env var is missing.
+function appOrigin() {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    window.location.origin
+  );
+}
+
 // ── OAuth ──────────────────────────────────────────────────────────────────────
 export async function signInWithGoogle(next = "/dashboard") {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${appOrigin()}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
   if (error) throw error;
@@ -53,10 +62,7 @@ export async function signUpWithEmail(
   password: string,
   options?: { fullName?: string; role?: "admin" | "viewer" },
 ) {
-  const redirectTo =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/auth/callback?next=/dashboard`
-      : undefined;
+  const redirectTo = `${appOrigin()}/auth/callback?next=/dashboard`;
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -75,7 +81,7 @@ export async function signUpWithEmail(
 
 export async function resetPassword(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+    redirectTo: `${appOrigin()}/auth/callback?type=recovery`,
   });
   if (error) throw error;
 }

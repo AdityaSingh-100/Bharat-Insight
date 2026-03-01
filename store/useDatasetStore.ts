@@ -28,6 +28,7 @@ interface DatasetState {
   // Actions
   fetchAvailableFiles: () => Promise<void>;
   loadFile: (filename: string) => Promise<void>;
+  loadFromUpload: (file: File) => Promise<void>;
   clearDataset: () => void;
   loadForOrg: (orgDefaultDataset: string) => Promise<void>;
 }
@@ -101,6 +102,45 @@ export const useDatasetStore = create<DatasetState>((set, get) => ({
       activeFile: null,
       error: null,
     }),
+
+  loadFromUpload: async (file: File) => {
+    const MAX_SIZE = 50 * 1024 * 1024; // 50 MB
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      set({ error: "Only .csv files are supported." });
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      set({
+        error: `File too large. Max size is 50 MB (got ${(file.size / 1024 / 1024).toFixed(1)} MB).`,
+      });
+      return;
+    }
+    set({ isLoading: true, error: null, activeFile: file.name });
+    try {
+      const csvText = await file.text();
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          try {
+            const dataset = parseCSV(csvText, file.name);
+            const filterOptions = buildFilterOptions(
+              dataset.rows,
+              dataset.columns,
+            );
+            const summary = computeDatasetSummary(
+              dataset.rows,
+              dataset.columns,
+            );
+            set({ dataset, filterOptions, summary, isLoading: false });
+          } catch (e) {
+            set({ error: String(e), isLoading: false });
+          }
+          resolve();
+        }, 0);
+      });
+    } catch (e) {
+      set({ error: String(e), isLoading: false });
+    }
+  },
 
   loadForOrg: async (orgDefaultDataset: string) => {
     const { availableFiles, activeFile, loadFile, fetchAvailableFiles } = get();

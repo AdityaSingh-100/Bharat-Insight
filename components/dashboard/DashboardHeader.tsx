@@ -40,7 +40,12 @@ function OrgSwitcher() {
             "rgb(255 255 255 / 0.04)")
         }
       >
-        <span>{orgConfig.icon}</span>
+        <span>
+          <orgConfig.icon
+            size={14}
+            style={{ color: "var(--color-org-primary)" }}
+          />
+        </span>
         <span className="hidden sm:block">{orgConfig.shortName}</span>
         <ChevronDown
           size={13}
@@ -91,7 +96,10 @@ function OrgSwitcher() {
                   "transparent")
               }
             >
-              <span className="text-xl">{org.icon}</span>
+              <org.icon
+                size={20}
+                style={{ color: "var(--color-org-primary)" }}
+              />
               <div className="flex-1">
                 <div className="text-sm font-medium">{org.name}</div>
                 <div
@@ -171,7 +179,7 @@ function RoleBadge() {
         }
       >
         {isAdmin ? <Shield size={11} /> : <Eye size={11} />}
-        {isAdmin ? "Admin" : "Viewer"}
+        <span className="hidden sm:inline">{isAdmin ? "Admin" : "Viewer"}</span>
         <ChevronDown
           size={10}
           style={{
@@ -316,28 +324,31 @@ export function DashboardHeader() {
 
   return (
     <header
-      className="fixed top-0 left-16 lg:left-60 right-0 h-14 z-10 flex items-center justify-between px-5 gap-3"
+      className="fixed top-0 left-12 md:left-16 lg:left-60 right-0 h-14 z-10 flex items-center justify-between px-3 sm:px-5 gap-2"
       style={{
         borderBottom: "1px solid rgb(255 255 255 / 0.06)",
-        background: "hsl(224 71% 4% / 0.85)",
+        background: "hsl(224 71% 4% / 0.9)",
         backdropFilter: "blur(24px)",
       }}
     >
       {/* Left */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
         <OrgSwitcher />
         <RoleBadge />
         <div
-          className="h-4 w-px hidden sm:block"
+          className="h-4 w-px hidden md:block shrink-0"
           style={{ background: "var(--color-border)" }}
         />
-        <DatasetFilePicker />
+        <div className="hidden md:block min-w-0">
+          <DatasetFilePicker />
+        </div>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button
           onClick={() => setCommandPalette(true)}
+          aria-label="Search (⌘K)"
           className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all"
           style={{
             background: "rgb(255 255 255 / 0.04)",
@@ -367,10 +378,24 @@ export function DashboardHeader() {
           </kbd>
         </button>
 
+        {/* Mobile search icon only */}
+        <button
+          onClick={() => setCommandPalette(true)}
+          aria-label="Search (⌘K)"
+          className="sm:hidden p-2 rounded-lg transition-all"
+          style={{
+            background: "rgb(255 255 255 / 0.04)",
+            border: "1px solid var(--color-border)",
+            color: "var(--color-muted-foreground)",
+          }}
+        >
+          <Search size={15} />
+        </button>
+
         <button
           onClick={() => setAIPanelOpen(true)}
-          className="ai-glow-btn relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-          title="AI Insights (Alt+A)"
+          aria-label="AI Insights (Alt+A)"
+          className="ai-glow-btn relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
           style={{
             background: "var(--color-org-muted)",
             border: "1px solid var(--color-org-border)",
@@ -387,7 +412,6 @@ export function DashboardHeader() {
               "0 0 12px var(--color-org-glow, transparent), 0 0 24px color-mix(in srgb, var(--color-org-primary) 15%, transparent)";
           }}
         >
-          {/* Pulsing live indicator */}
           <span
             className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
             style={{

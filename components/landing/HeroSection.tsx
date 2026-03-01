@@ -88,8 +88,11 @@ function DashboardPreview() {
     <div className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-xl overflow-hidden">
       {/* Fake header bar */}
       <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-3">
-        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-blue-500/30 to-indigo-500/30 flex items-center justify-center">
-          <BarChart3 size={12} className="text-blue-400" />
+        <div
+          className="w-6 h-6 rounded-lg flex items-center justify-center"
+          style={{ background: "var(--color-org-muted)" }}
+        >
+          <BarChart3 size={12} style={{ color: "var(--color-org-primary)" }} />
         </div>
         <span className="text-white/60 text-xs font-medium">
           Analytics Overview
@@ -158,7 +161,11 @@ function DashboardPreview() {
                 className="flex-1 flex flex-col items-center gap-0.5"
               >
                 <motion.div
-                  className="w-full rounded-t-sm bg-gradient-to-t from-blue-600/80 to-blue-400/60"
+                  className="w-full rounded-t-sm"
+                  style={{
+                    background: "var(--color-org-primary)",
+                    opacity: 0.7,
+                  }}
                   initial={{ height: 0 }}
                   animate={{ height: `${(d.value / maxVal) * 100}%` }}
                   transition={{
@@ -189,7 +196,12 @@ function DashboardPreview() {
             >
               <span className="text-white/60 flex-1">{row.state}</span>
               <span className="text-white/40">{row.operator}</span>
-              <span className="text-blue-400/80 font-medium">{row.subs}</span>
+              <span
+                className="font-medium"
+                style={{ color: "var(--color-org-primary)" }}
+              >
+                {row.subs}
+              </span>
             </motion.div>
           ))}
         </div>
@@ -235,22 +247,24 @@ export function HeroSection() {
       {/* Background */}
       <div className="absolute inset-0 dot-bg" />
 
-      {/* Animated orbs */}
+      {/* Ambient glow — follows department theme */}
       <div
-        className="orb orb-blue w-[500px] h-[500px] top-[10%] left-[15%]"
-        style={{ animationDelay: "0s" }}
+        className="absolute top-[10%] left-[15%] w-[500px] h-[500px] rounded-full opacity-[0.07] pointer-events-none"
+        style={{
+          background: "var(--color-org-primary)",
+          filter: "blur(120px)",
+        }}
       />
       <div
-        className="orb orb-purple w-[400px] h-[400px] bottom-[15%] right-[10%]"
-        style={{ animationDelay: "5s" }}
-      />
-      <div
-        className="orb orb-cyan w-[300px] h-[300px] top-[50%] left-[50%]"
-        style={{ animationDelay: "10s" }}
+        className="absolute bottom-[15%] right-[10%] w-[400px] h-[400px] rounded-full opacity-[0.04] pointer-events-none"
+        style={{
+          background: "var(--color-org-primary)",
+          filter: "blur(100px)",
+        }}
       />
 
-      {/* Radial gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background pointer-events-none" />
+      {/* Fade to background at bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 py-20 lg:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 lg:gap-12 items-center">
@@ -261,7 +275,12 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/[0.08] text-blue-400 text-sm mb-8"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm mb-8"
+              style={{
+                border: "1px solid var(--color-org-border)",
+                background: "var(--color-org-muted)",
+                color: "var(--color-org-primary)",
+              }}
             >
               <Sparkles size={13} className="animate-pulse" />
               <span className="font-medium">Powered by Google Gemini AI</span>
@@ -275,7 +294,7 @@ export function HeroSection() {
               className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.9] mb-6 font-inter"
             >
               <span className="text-white">Bharat</span>
-              <span className="text-gradient-animated">-Insight</span>
+              <span className="text-gradient">-Insight</span>
             </motion.h1>
 
             <motion.p
@@ -307,7 +326,8 @@ export function HeroSection() {
             >
               <Link
                 href="/dashboard"
-                className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-lg transition-all duration-300 shadow-xl shadow-blue-600/20 hover:shadow-blue-500/30 hover:scale-[1.02]"
+                className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-white font-semibold text-lg transition-all duration-300 hover:scale-[1.02] hover:opacity-90"
+                style={{ background: "var(--color-org-primary)" }}
               >
                 Launch Dashboard
                 <ArrowRight

@@ -291,7 +291,7 @@ export default function DashboardPage() {
 
       <Sidebar />
 
-      <div className="lg:pl-60 pl-16">
+      <div className="lg:pl-60 md:pl-16 pl-12">
         <DashboardHeader />
 
         <main className="pt-14">

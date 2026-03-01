@@ -145,7 +145,7 @@ export default function SettingsPage() {
 
       <Sidebar />
 
-      <div className="lg:pl-60 pl-16">
+      <div className="lg:pl-60 md:pl-16 pl-12">
         <DashboardHeader />
 
         <main className="pt-14">
@@ -301,7 +301,10 @@ export default function SettingsPage() {
                       border: "1px solid var(--color-org-border)",
                     }}
                   >
-                    <span className="text-2xl">{orgConfig.icon}</span>
+                    <orgConfig.icon
+                      size={22}
+                      style={{ color: "var(--color-org-primary)" }}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-white">
                         {orgConfig.name}
@@ -351,7 +354,10 @@ export default function SettingsPage() {
                               "var(--color-muted-foreground)";
                           }}
                         >
-                          <span className="text-lg">{o.icon}</span>
+                          <o.icon
+                            size={18}
+                            style={{ color: "var(--color-muted-foreground)" }}
+                          />
                           <span>{o.name}</span>
                         </button>
                       ))}
@@ -543,7 +549,7 @@ export default function SettingsPage() {
                             : "var(--color-muted-foreground)",
                       }}
                     >
-                      <span>{o.icon}</span>
+                      <o.icon size={16} />
                       <span>{o.shortName}</span>
                       {currentOrg === o.id && <CheckCircle2 size={12} />}
                     </button>
