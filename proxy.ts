@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const url = req.nextUrl;
   let response = NextResponse.next({ request: req });
 
@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Create a Supabase client that reads/writes cookies via the middleware
+  // Create a Supabase client that reads/writes cookies via the proxy
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {

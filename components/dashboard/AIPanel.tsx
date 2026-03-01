@@ -49,6 +49,17 @@ export function AIPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const orgConfig = ORG_CONFIGS[currentOrg];
 
+  // Clear chat history when the user switches org
+  useEffect(() => {
+    const handleOrgSwitch = () => {
+      setMessages([]);
+      setInput("");
+      setIsLoading(false);
+    };
+    window.addEventListener("org-switch", handleOrgSwitch);
+    return () => window.removeEventListener("org-switch", handleOrgSwitch);
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);

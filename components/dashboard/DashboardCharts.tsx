@@ -1,10 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { motion } from "motion/react";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import type { ParsedDataset } from "@/lib/csv-engine";
 
@@ -32,33 +42,48 @@ interface DashboardChartsProps {
   filteredRows: Record<string, unknown>[];
 }
 
-export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps) {
+export const DashboardCharts = memo(function DashboardCharts({
+  dataset,
+  filteredRows,
+}: DashboardChartsProps) {
   const { columns } = dataset;
   const rows = filteredRows.length > 0 ? filteredRows : dataset.rows;
-  const sample = rows.slice(0, 500);
+  // Stable sample — recomputes only when rows reference changes
+  const sample = useMemo(() => rows.slice(0, 500), [rows]);
 
   // Find first year/string column for X axis
   const xCol = useMemo(
-    () => columns.find((c) => c.type === "year") ?? columns.find((c) => c.isFilterable),
-    [columns]
+    () =>
+      columns.find((c) => c.type === "year") ??
+      columns.find((c) => c.isFilterable),
+    [columns],
   );
 
   // Find top numeric columns
   const numericCols = useMemo(
-    () => columns.filter((c) => ["number", "currency", "percentage"].includes(c.type)).slice(0, 3),
-    [columns]
+    () =>
+      columns
+        .filter((c) => ["number", "currency", "percentage"].includes(c.type))
+        .slice(0, 3),
+    [columns],
   );
 
   // Find top categorical for pie
   const catCol = useMemo(
-    () => columns.find((c) => c.isFilterable && c.uniqueCount >= 2 && c.uniqueCount <= 15),
-    [columns]
+    () =>
+      columns.find(
+        (c) => c.isFilterable && c.uniqueCount >= 2 && c.uniqueCount <= 15,
+      ),
+    [columns],
   );
 
   // Build area chart data — aggregate by x-axis column
   const areaData = useMemo(() => {
     if (!xCol || numericCols.length === 0) return [];
-    const groups = new Map<string, { count: number; sums: Record<string, number> }>();
+    const groups = new Map<
+      string,
+      { count: number; sums: Record<string, number> }
+    >();
     sample.forEach((row) => {
       const key = String(row[xCol.key] ?? "Unknown");
       if (!groups.has(key)) groups.set(key, { count: 0, sums: {} });
@@ -73,7 +98,9 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
       .slice(0, 12)
       .map(([key, { count, sums }]) => ({
         label: key,
-        ...Object.fromEntries(numericCols.map((nc) => [nc.key, Math.round(sums[nc.key] / count)])),
+        ...Object.fromEntries(
+          numericCols.map((nc) => [nc.key, Math.round(sums[nc.key] / count)]),
+        ),
       }));
   }, [sample, xCol, numericCols]);
 
@@ -102,27 +129,52 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="lg:col-span-2 rounded-xl p-5"
-          style={{ background: "rgb(255 255 255 / 0.02)", border: "1px solid var(--color-border)" }}
+          style={{
+            background:
+              "linear-gradient(135deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.01) 100%)",
+            border: "1px solid rgb(255 255 255 / 0.06)",
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-medium text-white">
               {numericCols[0]?.label} by {xCol?.label}
             </h3>
-            <span className="text-xs" style={{ color: "var(--color-muted-foreground)" }}>
+            <span
+              className="text-xs"
+              style={{ color: "var(--color-muted-foreground)" }}
+            >
               top {areaData.length} {xCol?.label} values
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={areaData}>
               <defs>
                 {numericCols.map((col, i) => (
-                  <linearGradient key={col.key} id={`grad_${i}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS[i % CHART_COLORS.length]} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={CHART_COLORS[i % CHART_COLORS.length]} stopOpacity={0} />
+                  <linearGradient
+                    key={col.key}
+                    id={`grad_${i}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor={CHART_COLORS[i % CHART_COLORS.length]}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={CHART_COLORS[i % CHART_COLORS.length]}
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 ))}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgb(255 255 255 / 0.04)" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgb(255 255 255 / 0.04)"
+              />
               <XAxis
                 dataKey="label"
                 tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }}
@@ -133,7 +185,13 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
                 tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(v) => v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? (v / 1e3).toFixed(0) + "K" : v}
+                tickFormatter={(v) =>
+                  v >= 1e6
+                    ? (v / 1e6).toFixed(1) + "M"
+                    : v >= 1e3
+                      ? (v / 1e3).toFixed(0) + "K"
+                      : v
+                }
               />
               <Tooltip {...TOOLTIP_STYLE} />
               {numericCols.map((col, i) => (
@@ -159,12 +217,16 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="rounded-xl p-5"
-          style={{ background: "rgb(255 255 255 / 0.02)", border: "1px solid var(--color-border)" }}
+          style={{
+            background:
+              "linear-gradient(135deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.01) 100%)",
+            border: "1px solid rgb(255 255 255 / 0.06)",
+          }}
         >
           <h3 className="text-sm font-medium text-white mb-4">
             By {catCol.label}
           </h3>
-          <ResponsiveContainer width="100%" height={140}>
+          <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie
                 data={pieData}
@@ -189,7 +251,11 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ background: CHART_COLORS[i % CHART_COLORS.length] }}
                 />
-                <span className="flex-1 truncate" style={{ color: "var(--color-muted-foreground)" }} title={d.name}>
+                <span
+                  className="flex-1 truncate"
+                  style={{ color: "var(--color-muted-foreground)" }}
+                  title={d.name}
+                >
                   {d.name}
                 </span>
                 <span className="font-medium text-white">{d.value}</span>
@@ -200,4 +266,4 @@ export function DashboardCharts({ dataset, filteredRows }: DashboardChartsProps)
       )}
     </div>
   );
-}
+});

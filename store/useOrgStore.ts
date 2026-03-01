@@ -51,6 +51,7 @@ interface OrgState {
 
   setOrg: (org: OrgId) => void;
   setRole: (role: Role) => void;
+  syncRoleFromAuth: (role?: string | null) => void;
   toggleAIPanel: () => void;
   setAIPanelOpen: (open: boolean) => void;
   setCommandPalette: (open: boolean) => void;
@@ -81,6 +82,12 @@ export const useOrgStore = create<OrgState>()(
             document.documentElement.classList.add(ORG_CONFIGS[org].themeClass);
           }
         }
+        // Notify components to reset state (AI messages, grid selection)
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("org-switch", { detail: { org } }),
+          );
+        }
         // Trigger per-org dataset load
         import("@/store/useDatasetStore").then(({ useDatasetStore }) => {
           useDatasetStore
@@ -90,6 +97,14 @@ export const useOrgStore = create<OrgState>()(
       },
 
       setRole: (role) => set({ role }),
+
+      // Sync role from Supabase user_metadata — falls back to current role
+      syncRoleFromAuth: (roleFromMeta) => {
+        if (roleFromMeta === "admin" || roleFromMeta === "viewer") {
+          set({ role: roleFromMeta });
+        }
+        // If metadata has no role, keep the existing persisted role
+      },
       toggleAIPanel: () => set((s) => ({ isAIPanelOpen: !s.isAIPanelOpen })),
       setAIPanelOpen: (open) => set({ isAIPanelOpen: open }),
       setCommandPalette: (open) => set({ isCommandPaletteOpen: open }),

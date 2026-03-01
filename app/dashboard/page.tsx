@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
+import Link from "next/link";
 import { useOrgStore, ORG_CONFIGS } from "@/store/useOrgStore";
 import { useDatasetStore } from "@/store/useDatasetStore";
 import { buildTableColumns, computeDatasetSummary } from "@/lib/csv-engine";
@@ -10,6 +11,7 @@ import { DataGrid } from "@/components/dashboard/DataGrid";
 import { AIPanel } from "@/components/dashboard/AIPanel";
 import { CommandPalette } from "@/components/dashboard/CommandPalette";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
+import { supabase } from "@/lib/supabase";
 import {
   FileSpreadsheet,
   Database,
@@ -18,11 +20,11 @@ import {
   Settings,
   HelpCircle,
   Shield,
-  Eye,
   Keyboard,
   Zap,
   Brain,
   Filter,
+  ArrowRight,
 } from "lucide-react";
 import type { DatasetSummary } from "@/lib/csv-engine";
 
@@ -87,43 +89,77 @@ const DynamicStatCards = memo(function DynamicStatCards({
 
   if (numericEntries.length === 0) return null;
 
+  function fmt(n: number | undefined): string {
+    if (n === undefined || n === null) return "—";
+    if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+    if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1) + "K";
+    return n % 1 === 0 ? String(n) : n.toFixed(2);
+  }
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      {numericEntries.map(([label, stats], i) => (
-        <div
-          key={label}
-          className="rounded-xl p-4 transition-all duration-200 hover:bg-white/5"
-          style={{
-            background: "rgb(255 255 255 / 0.03)",
-            border: "1px solid var(--color-border)",
-          }}
-        >
+      {numericEntries.map(([label, stats]) => {
+        const spread =
+          stats.mean && stats.max && stats.mean !== 0
+            ? (((stats.max - stats.mean) / Math.abs(stats.mean)) * 100).toFixed(
+                0,
+              )
+            : null;
+        return (
           <div
-            className="text-xs font-medium mb-2 uppercase tracking-wide truncate"
-            style={{ color: "var(--color-muted-foreground)" }}
+            key={label}
+            className="rounded-xl p-5 transition-all duration-300 hover:bg-white/[0.04]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgb(255 255 255 / 0.04) 0%, rgb(255 255 255 / 0.015) 100%)",
+              border: "1px solid rgb(255 255 255 / 0.06)",
+              borderLeft: "3px solid var(--color-org-primary)",
+            }}
           >
-            {label}
+            {/* Label */}
+            <div
+              className="text-xs font-medium mb-3 uppercase tracking-widest truncate"
+              style={{ color: "var(--color-muted-foreground)" }}
+            >
+              {label.replace(/_/g, " ")}
+            </div>
+
+            {/* Main KPI value */}
+            <div className="flex items-end gap-2 mb-2">
+              <div className="text-3xl font-bold text-white leading-none">
+                {fmt(stats.mean)}
+              </div>
+              {spread && Number(spread) > 0 && (
+                <span
+                  className="text-xs pb-0.5 font-medium"
+                  style={{ color: "var(--color-success)" }}
+                >
+                  ▲{spread}%
+                </span>
+              )}
+            </div>
+
+            {/* Sub-row: min / max / rows */}
+            <div
+              className="flex items-center gap-3 text-[11px] mt-2 pt-2"
+              style={{
+                borderTop: "1px solid var(--color-border)",
+                color: "var(--color-muted-foreground)",
+              }}
+            >
+              <span>
+                <span className="text-white/40">min</span> {fmt(stats.min)}
+              </span>
+              <span>
+                <span className="text-white/40">max</span> {fmt(stats.max)}
+              </span>
+              <span className="ml-auto">
+                {summary.rowCount.toLocaleString("en-IN")} rows
+              </span>
+            </div>
           </div>
-          <div className="text-xl font-bold text-white truncate">
-            {stats.mean && stats.mean > 1_000_000
-              ? (stats.mean / 1_000_000).toFixed(1) + "M"
-              : stats.mean && stats.mean > 1_000
-                ? (stats.mean / 1_000).toFixed(1) + "K"
-                : (stats.mean?.toFixed(2) ?? "—")}
-          </div>
-          <div
-            className="text-xs mt-1"
-            style={{ color: "var(--color-muted-foreground)" }}
-          >
-            avg · max{" "}
-            {stats.max && stats.max > 1_000_000
-              ? (stats.max / 1_000_000).toFixed(1) + "M"
-              : stats.max && stats.max > 1_000
-                ? (stats.max / 1_000).toFixed(1) + "K"
-                : (stats.max?.toFixed(2) ?? "—")}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 });
@@ -165,121 +201,26 @@ const HELP_ITEMS = [
   },
 ];
 
-// ─── Settings: Role card ─────────────────────────────────────────────────────
-function RoleCard() {
-  const { role, setRole } = useOrgStore();
-  const isAdmin = role === "admin";
-  return (
-    <div
-      className="rounded-xl p-5"
-      style={{
-        background: "rgb(255 255 255 / 0.03)",
-        border: "1px solid var(--color-border)",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        {isAdmin ? (
-          <Shield size={14} style={{ color: "var(--color-org-primary)" }} />
-        ) : (
-          <Eye size={14} style={{ color: "var(--color-muted-foreground)" }} />
-        )}
-        <span className="text-sm font-semibold text-white">Access Role</span>
-        <span
-          className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
-          style={{
-            background: isAdmin
-              ? "var(--color-org-muted)"
-              : "rgb(255 255 255 / 0.06)",
-            color: isAdmin
-              ? "var(--color-org-primary)"
-              : "var(--color-muted-foreground)",
-          }}
-        >
-          {isAdmin ? "Admin" : "Viewer"}
-        </span>
-      </div>
-      <p
-        className="text-xs mb-4"
-        style={{ color: "var(--color-muted-foreground)" }}
-      >
-        {isAdmin
-          ? "You can edit and delete rows in the data grid."
-          : "Read-only access. Switch to Admin to edit data."}
-      </p>
-      <button
-        onClick={() => setRole(isAdmin ? "viewer" : "admin")}
-        className="w-full py-2 rounded-lg text-sm font-medium transition-all"
-        style={{
-          background: "var(--color-org-muted)",
-          border: "1px solid var(--color-org-border)",
-          color: "var(--color-org-primary)",
-        }}
-      >
-        Switch to {isAdmin ? "Viewer" : "Admin"}
-      </button>
-    </div>
-  );
-}
-
-// ─── Settings: Org info card ─────────────────────────────────────────────────
-function OrgInfoCard() {
-  const { currentOrg, setOrg } = useOrgStore();
-  const orgConfig = ORG_CONFIGS[currentOrg] ?? ORG_CONFIGS["health"];
-  const otherOrg = Object.values(ORG_CONFIGS).find((o) => o.id !== currentOrg)!;
-  return (
-    <div
-      className="rounded-xl p-5"
-      style={{
-        background: "rgb(255 255 255 / 0.03)",
-        border: "1px solid var(--color-border)",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-base">{orgConfig.icon}</span>
-        <span className="text-sm font-semibold text-white">
-          {orgConfig.name}
-        </span>
-        <span
-          className="ml-auto text-xs px-2 py-0.5 rounded-full"
-          style={{
-            background: "var(--color-org-muted)",
-            color: "var(--color-org-primary)",
-          }}
-        >
-          {orgConfig.shortName}
-        </span>
-      </div>
-      <p
-        className="text-xs mb-4"
-        style={{ color: "var(--color-muted-foreground)" }}
-      >
-        {orgConfig.description} · Default dataset:{" "}
-        <code className="text-white/60">{orgConfig.defaultDataset}</code>
-      </p>
-      <button
-        onClick={() => setOrg(otherOrg.id)}
-        className="w-full py-2 rounded-lg text-sm font-medium transition-all"
-        style={{
-          background: "rgb(255 255 255 / 0.04)",
-          border: "1px solid var(--color-border)",
-          color: "var(--color-muted-foreground)",
-        }}
-      >
-        Switch to {otherOrg.icon} {otherOrg.shortName}
-      </button>
-    </div>
-  );
-}
-
 // ─── Dashboard page ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { currentOrg } = useOrgStore();
+  const { currentOrg, syncRoleFromAuth } = useOrgStore();
   const { dataset, filterOptions, isLoading, activeFile } = useDatasetStore();
 
   const [filteredCount, setFilteredCount] = useState(0);
   const [filteredRows, setFilteredRows] = useState<Record<string, unknown>[]>(
     [],
   );
+
+  // Sync role from Supabase auth metadata on mount
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        syncRoleFromAuth(
+          session.user.user_metadata?.role as string | undefined,
+        );
+      }
+    });
+  }, [syncRoleFromAuth]);
 
   // Apply org theme
   useEffect(() => {
@@ -307,7 +248,10 @@ export default function DashboardPage() {
             statistics: {},
           }
         : null;
-    return computeDatasetSummary(filteredRows, dataset.columns);
+    // Always cap to 5 000 rows so stats computation stays under ~5 ms
+    const sample =
+      filteredRows.length > 5_000 ? filteredRows.slice(0, 5_000) : filteredRows;
+    return computeDatasetSummary(sample, dataset.columns);
   }, [dataset, filteredRows]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -317,8 +261,9 @@ export default function DashboardPage() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         setFilteredCount(count);
-        setFilteredRows(rows);
-      }, 120);
+        // Cap stored rows to avoid heavy summary computation on huge datasets
+        setFilteredRows(rows.length > 10_000 ? rows.slice(0, 10_000) : rows);
+      }, 250);
     },
     [],
   );
@@ -333,19 +278,27 @@ export default function DashboardPage() {
       {/* Background glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full"
+          className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full"
           style={{
             background: "var(--color-org-primary)",
-            opacity: 0.03,
+            opacity: 0.04,
+            filter: "blur(140px)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-60 w-[400px] h-[400px] rounded-full"
+          style={{
+            background: "var(--color-org-primary)",
+            opacity: 0.025,
             filter: "blur(120px)",
           }}
         />
         <div
-          className="absolute bottom-0 left-60 w-[350px] h-[350px] rounded-full"
+          className="absolute top-1/2 right-1/3 w-[200px] h-[200px] rounded-full"
           style={{
-            background: "var(--color-org-primary)",
+            background: "hsl(280 65% 60%)",
             opacity: 0.02,
-            filter: "blur(100px)",
+            filter: "blur(80px)",
           }}
         />
       </div>
@@ -360,15 +313,15 @@ export default function DashboardPage() {
             {/* Overview section */}
             <div
               id="overview"
-              className="flex items-start justify-between flex-wrap gap-2 scroll-mt-16"
+              className="flex items-start justify-between flex-wrap gap-3 scroll-mt-16"
             >
               <div>
-                <h1 className="text-lg font-bold text-white flex items-center gap-2">
-                  <span>{orgConfig.icon}</span>
+                <h1 className="text-xl font-bold text-white flex items-center gap-2.5">
+                  <span className="text-2xl">{orgConfig.icon}</span>
                   {orgConfig.name}
                 </h1>
                 <p
-                  className="text-sm mt-0.5"
+                  className="text-sm mt-1"
                   style={{ color: "var(--color-muted-foreground)" }}
                 >
                   {activeFile
@@ -432,13 +385,23 @@ export default function DashboardPage() {
                 )}
             </div>
 
+            {/* Divider between Analytics and Data Grid */}
+            <div
+              className="h-px"
+              style={{
+                background:
+                  "linear-gradient(to right, transparent, rgb(255 255 255 / 0.06), transparent)",
+              }}
+            />
+
             {/* Main Data Grid */}
             <div
               id="grid"
               className="rounded-xl overflow-hidden scroll-mt-16"
               style={{
-                border: "1px solid var(--color-border)",
-                background: "rgb(255 255 255 / 0.01)",
+                border: "1px solid rgb(255 255 255 / 0.06)",
+                background:
+                  "linear-gradient(135deg, rgb(255 255 255 / 0.02) 0%, rgb(255 255 255 / 0.005) 100%)",
               }}
             >
               <div
@@ -486,21 +449,44 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* ─── Settings Section ──────────────────────── */}
-            <div id="settings" className="scroll-mt-16 space-y-4 pt-2">
-              <div className="flex items-center gap-2 mb-1">
-                <Settings
+            {/* ─── Settings shortcut ─────────────────────── */}
+            <div id="settings" className="scroll-mt-16 pt-2">
+              <Link
+                href="/dashboard/settings"
+                className="group flex items-center justify-between px-5 py-4 rounded-xl transition-all"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.01) 100%)",
+                  border: "1px solid rgb(255 255 255 / 0.07)",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: "var(--color-org-muted)" }}
+                  >
+                    <Settings
+                      size={16}
+                      style={{ color: "var(--color-org-primary)" }}
+                    />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-white">
+                      Settings
+                    </div>
+                    <div
+                      className="text-xs"
+                      style={{ color: "var(--color-muted-foreground)" }}
+                    >
+                      Account · Organisation · Dataset · Security
+                    </div>
+                  </div>
+                </div>
+                <ArrowRight
                   size={15}
-                  style={{ color: "var(--color-org-primary)" }}
+                  className="text-white/30 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all"
                 />
-                <h2 className="text-sm font-semibold text-white">Settings</h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Role switcher */}
-                <RoleCard />
-                {/* Org info */}
-                <OrgInfoCard />
-              </div>
+              </Link>
             </div>
 
             {/* ─── Help Section ──────────────────────────── */}
