@@ -52,7 +52,6 @@ npm run dev
 # → http://localhost:3000
 ```
 
-
 ## Project Structure
 
 ```
@@ -144,8 +143,7 @@ Switch organizations instantly — pure CSS variable swap:
 | **Admin**  | View, edit, delete rows, export CSV, AI insights, toggle role |
 | **Viewer** | View, search, export CSV, AI insights (no edit/delete)        |
 
-Roles are stored in a Supabase `profiles` table. New signups get `viewer` by default. Admins are promoted via the Supabase Dashboard.
----
+## Roles are stored in a Supabase `profiles` table. New signups get `viewer` by default. Admins are promoted via the Supabase Dashboard.
 
 ## Environment Variables
 
@@ -183,10 +181,6 @@ The engine handles everything else — type inference, filters, charts, and AI c
 3. Add environment variables
 4. Deploy
 
-
-
-
-
 ## Scripts
 
 ```bash
@@ -195,6 +189,38 @@ npm run build    # Production build
 npm start        # Start production server
 npm run lint     # ESLint
 ```
+
+---
+
+## Technical Design Notes
+
+### Data Handling
+
+All CSV processing happens on the client. The file is fetched from `/api/dataset`, parsed with **PapaParse**, and each column's type (`number`, `year`, `percentage`, `currency`, `boolean`, `string`) is inferred automatically from its header name and values. Basic statistics (min, max, mean) are computed once and stored in Zustand — the table, charts, and AI all read from the same parsed result.
+
+### Design Standards
+
+- **Tailwind CSS v4** with a single `@theme {}` block in `globals.css` for all design tokens.
+- **Org colour** is a set of CSS variables (`--color-org-primary`, etc.) redefined per org class — switching orgs swaps one class on `<html>`, no JS re-render needed.
+- **Dark mode only** — no light theme variants.
+- **Framer Motion** for animations, **Lucide React** for all icons, `cn()` (clsx + tailwind-merge) for all class merging.
+
+### Virtualization
+
+The DataGrid uses **client-side pagination** — the full sorted/filtered array is sliced into pages of 25, 50, 100, or 200 rows. TanStack Table only receives the current page slice, keeping DOM nodes minimal regardless of total dataset size. Page resets to 1 whenever filters or sort order change.
+
+### Multi-Tenancy Logic
+
+Tenancy is client-side only — no per-org database or server routing.
+
+- Each org has a config entry (`name`, `themeClass`, `defaultDataset`) in `ORG_CONFIGS`.
+- Switching org applies the org's CSS class, clears active filters, and loads the org's default dataset.
+- Role (`admin` / `viewer`) is read from Supabase on login and stored in Zustand. Only admins can edit or delete rows.
+- Adding a new org requires one config entry, one CSS class, and a CSV file — nothing else.
+
+### AI Prompt Design
+
+The Gemini prompt is built dynamically at query time from the **current filtered view** — it includes the dataset name, column list, numeric stats (min/max/mean), categorical breakdowns, and any active filters. This means the AI's answer always reflects exactly what the user is looking at. Responses stream token-by-token to the UI. If the primary model hits a rate limit, it automatically falls back through `gemini-2.5-flash-lite` → `gemini-2.5-flash` → `gemini-2.5-pro`.
 
 ---
 
