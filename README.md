@@ -152,10 +152,10 @@ Roles are stored in a Supabase `profiles` table. New signups get `viewer` by def
 ```dotenv
 # Required
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 
-# Required for AI (optional — falls back to mock)
-NEXT_PUBLIC_GEMINI_API_KEY=AIzaSy...
+
+NEXT_PUBLIC_GEMINI_API_KEY=YOUR_GEMINI_KEY
 
 # Optional — prevents OAuth port mismatch
 NEXT_PUBLIC_APP_URL=http://localhost:3000
